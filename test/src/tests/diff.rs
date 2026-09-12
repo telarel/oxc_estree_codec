@@ -2,7 +2,7 @@ use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 
 use oxc_estree_compat::__internal::roundtrip;
-use oxc_estree_compat::{ToJsonOptions, program_to_json};
+use oxc_estree_compat::{ProgramToJsonOptions, program_to_json};
 
 fn roundtrip_diff(
     file: &str,
@@ -20,12 +20,15 @@ fn roundtrip_diff(
 
     assert!(parser_return.diagnostics.is_empty(), "fixture must parse: {file}");
 
-    let before: String =
-        program_to_json(&parser_return.program, ToJsonOptions::default());
+    let before: String = program_to_json(
+        &parser_return.program,
+        ProgramToJsonOptions::default(),
+    );
     let program: oxc::ast::ast::Program<'_> =
         roundtrip(&allocator, &parser_return.program)
             .expect("roundtrip must read serializer output back");
-    let after: String = program_to_json(&program, ToJsonOptions::default());
+    let after: String =
+        program_to_json(&program, ProgramToJsonOptions::default());
 
     assert_eq!(before, after, "roundtrip must be byte-stable: {file}");
 }

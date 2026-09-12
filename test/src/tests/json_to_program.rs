@@ -1,7 +1,7 @@
 use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 
-use oxc_estree_compat::{FromJsonOptions, json_to_program};
+use oxc_estree_compat::{JsonToProgramOptions, json_to_program};
 
 #[test]
 fn test_json_to_program_reads_serializer_output() {
@@ -22,7 +22,7 @@ fn test_json_to_program_reads_serializer_output() {
     // strings itself, so the input never needs to outlive the arena.
     let program: oxc::ast::ast::Program<'_> = json_to_program(
         &json,
-        FromJsonOptions {
+        JsonToProgramOptions {
             allocator: &allocator,
             source_type: parser_return.program.source_type,
             source_text: code,
@@ -40,7 +40,7 @@ fn test_json_to_program_rejects_invalid_json() {
 
     let result = json_to_program(
         "{not json",
-        FromJsonOptions {
+        JsonToProgramOptions {
             allocator: &allocator,
             source_type: SourceType::from_path("a.js").unwrap(),
             source_text: "",
