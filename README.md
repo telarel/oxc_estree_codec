@@ -1,6 +1,6 @@
-# OXC ESTree Compat
+# OXC ESTree Codec
 
-A OXC ESTree compatible layer.
+A two-way codec between ESTree and oxc's typed AST.
 
 ## Contributing
 

@@ -1,6 +1,6 @@
-# OXC ESTree Compat
+# oxc_estree_codec
 
-A OXC ESTree compatible layer.
+A two-way codec between ESTree and oxc's typed AST.
 
 ## License
 

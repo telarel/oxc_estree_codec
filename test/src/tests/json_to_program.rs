@@ -1,12 +1,14 @@
 use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 
-use oxc_estree_compat::{JsonToProgramOptions, json_to_program};
+use oxc_estree_codec::{JsonToProgramOptions, json_to_program};
 
 #[test]
 fn test_json_to_program_reads_serializer_output() {
     let code: &str = "const greeting = \"hello\";";
+
     let allocator: Allocator = Allocator::default();
+
     let parser_return: oxc::parser::ParserReturn<'_> =
         oxc::parser::Parser::new(
             &allocator,
@@ -14,6 +16,7 @@ fn test_json_to_program_reads_serializer_output() {
             SourceType::from_path("a.ts").unwrap(),
         )
         .parse();
+
     assert!(parser_return.diagnostics.is_empty());
 
     let json: String = parser_return.program.to_estree_json(true, false);
@@ -31,6 +34,7 @@ fn test_json_to_program_reads_serializer_output() {
     .unwrap();
 
     let out: String = oxc::codegen::Codegen::new().build(&program).code;
+
     assert_eq!(out, "const greeting = \"hello\";\n");
 }
 

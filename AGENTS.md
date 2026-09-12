@@ -1,6 +1,6 @@
-# OXC ESTree Compat
+# OXC ESTree Codec
 
-This is a crate for compatibility between JavaScript AST and Rust AST.
+This is a codec between the JavaScript AST (ESTree) and the Rust AST (oxc).
 
 ## Architecture
 

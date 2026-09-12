@@ -7,7 +7,7 @@ members = ["crate", "test", "bench"]
 [workspace.dependencies]
 
 # Workspace
-oxc_estree_compat = { version = "0.1.0", path = "crate" }
+oxc_estree_codec = { version = "0.1.0", path = "crate" }
 
 # Crates
 oxc = { version = "~0.149.0" }

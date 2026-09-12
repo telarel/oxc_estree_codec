@@ -5,7 +5,7 @@ use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 use sonic_rs::Value;
 
-use oxc_estree_compat::__internal::ProgramReader;
+use oxc_estree_codec::__internal::ProgramReader;
 
 const FIXTURE: &str = r#"import React, { createContext, useContext } from "react";
 

@@ -2,7 +2,7 @@ use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 use sonic_rs::Value;
 
-use oxc_estree_compat::__internal::ProgramReader;
+use oxc_estree_codec::__internal::ProgramReader;
 
 fn parse_value(json: &str) -> Value {
     sonic_rs::from_str::<Value>(json).unwrap()

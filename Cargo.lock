@@ -73,7 +73,7 @@ version = "0.0.0"
 dependencies = [
  "criterion",
  "oxc",
- "oxc_estree_compat",
+ "oxc_estree_codec",
  "sonic-rs",
 ]
 
@@ -768,7 +768,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "oxc_estree_compat"
+name = "oxc_estree_codec"
 version = "0.1.0"
 dependencies = [
  "oxc",
@@ -1375,7 +1375,7 @@ name = "test"
 version = "0.0.0"
 dependencies = [
  "oxc",
- "oxc_estree_compat",
+ "oxc_estree_codec",
  "sonic-rs",
 ]
 

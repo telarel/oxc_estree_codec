@@ -1,17 +1,17 @@
 #:schema https://www.schemastore.org/cargo.json
 
 [package]
-name = "oxc_estree_compat"
+name = "oxc_estree_codec"
 version = "0.1.0"
 authors = ["Alpheus <contact@alphe.us>"]
 edition = "2024"
 rust-version = "1.96.0"
-description = "A OXC ESTree compatible layer"
+description = "A two-way codec between ESTree and oxc's typed AST"
 readme = "README.md"
-homepage = "https://github.com/telarel/oxc_estree_compat"
-repository = "https://github.com/telarel/oxc_estree_compat"
+homepage = "https://github.com/telarel/oxc_estree_codec"
+repository = "https://github.com/telarel/oxc_estree_codec"
 license = "MIT"
-keywords = ["oxc", "estree", "compat"]
+keywords = ["oxc", "estree", "codec"]
 categories = ["compilers", "web-programming"]
 include = ["src/**", "Cargo.toml", "README.md"]
 

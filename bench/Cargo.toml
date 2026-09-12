@@ -8,7 +8,7 @@ publish = false
 
 [dependencies]
 oxc = { workspace = true, features = ["codegen", "serialize"] }
-oxc_estree_compat = { workspace = true }
+oxc_estree_codec = { workspace = true }
 sonic-rs = { workspace = true }
 
 [dev-dependencies]

@@ -1,10 +1,10 @@
 [< Back](./README.md)
 
-# Contributing to OXC ESTree Compat
+# Contributing to OXC ESTree Codec
 
 Thanks for your interest in contributing!
 
-This is a guideline for contributing to OXC ESTree Compat.
+This is a guideline for contributing to OXC ESTree Codec.
 
 ## Before the Contribution
 

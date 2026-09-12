@@ -1,8 +1,8 @@
 use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 
-use oxc_estree_compat::__internal::roundtrip;
-use oxc_estree_compat::{ProgramToJsonOptions, program_to_json};
+use oxc_estree_codec::__internal::roundtrip;
+use oxc_estree_codec::{ProgramToJsonOptions, program_to_json};
 
 fn roundtrip_diff(
     file: &str,

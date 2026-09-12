@@ -50,11 +50,11 @@ check: fmt ls-lint typos lint test
 
 # Publish the crate as dry-run
 publish-try:
-    cargo publish -p oxc_estree_compat --dry-run
+    cargo publish -p oxc_estree_codec --dry-run
 
 # Publish the crate
 publish:
-    cargo publish -p oxc_estree_compat
+    cargo publish -p oxc_estree_codec
 
 # Clean
 clean:
