@@ -4,6 +4,7 @@
 name = "test"
 edition = "2024"
 rust-version = "1.95.0"
+publish = false
 
 [dependencies]
 oxc = { workspace = true, features = ["codegen"] }
