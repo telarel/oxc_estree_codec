@@ -10,5 +10,5 @@ members = ["crate", "test", "bench"]
 oxc_estree_compat = { version = "0.1.0", path = "crate" }
 
 # Crates
-oxc = { version = "~0.146.0" }
+oxc = { version = "~0.149.0" }
 sonic-rs = { version = "~0.5.0" }
