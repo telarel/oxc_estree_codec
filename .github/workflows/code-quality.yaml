@@ -30,9 +30,9 @@ jobs:
 
             - name: Run ls-lint
               run: just ls-lint
-            
+
             - name: Run typos-cli
               run: just typos
-            
+
             - name: Run linter
               run: just lint
