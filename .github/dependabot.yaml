@@ -1,0 +1,48 @@
+version: 2
+updates:
+    # GitHub Actions
+    - package-ecosystem: "github-actions"
+      directory: "/"
+      schedule:
+          interval: "daily"
+          time: "00:00"
+          timezone: "Etc/UTC"
+      cooldown:
+          default-days: 1
+          include:
+              - "*"
+      commit-message:
+          prefix: "chore"
+    # NPM
+    - package-ecosystem: "npm"
+      directory: "/"
+      schedule:
+          interval: "daily"
+          time: "00:00"
+          timezone: "Etc/UTC"
+      cooldown:
+          default-days: 1
+          include:
+              - "*"
+      commit-message:
+          prefix: "chore"
+    # Cargo
+    - package-ecosystem: "cargo"
+      directory: "/"
+      schedule:
+          interval: "daily"
+          time: "00:00"
+          timezone: "Etc/UTC"
+      cooldown:
+          default-days: 1
+          include:
+              - "*"
+      commit-message:
+          prefix: "chore"
+      ignore:
+          - dependency-name: "oxc"
+            update-types:
+                - "version-update:semver-patch"
+          - dependency-name: "sonic-rs"
+            update-types:
+                - "version-update:semver-patch"
