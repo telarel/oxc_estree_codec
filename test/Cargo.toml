@@ -6,4 +6,6 @@ edition = "2024"
 rust-version = "1.95.0"
 
 [dependencies]
+oxc = { workspace = true, features = ["codegen"] }
 oxc_estree_compat = { workspace = true }
+sonic-rs = { workspace = true }

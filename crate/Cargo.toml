@@ -16,7 +16,5 @@ categories = ["compilers", "web-programming"]
 include = ["src/**", "Cargo.toml", "README.md"]
 
 [dependencies]
-oxc = { workspace = true, features = ["codegen", "serialize"] }
-oxc_sourcemap = { workspace = true }
-serde_json = { workspace = true }
+oxc = { workspace = true, features = ["serialize"] }
 sonic-rs = { workspace = true }

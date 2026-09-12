@@ -10,10 +10,5 @@ members = ["crate", "test"]
 oxc_estree_compat = { version = "0.1.0", path = "crate" }
 
 # Crates
-anyhow = { version = "^1.0.0" }
 oxc = { version = "~0.146.0" }
-oxc_sourcemap = { version = "^8.1.0" }
-serde = { version = "^1.0.0" }
-serde_json = { version = "^1.0.0" }
-sonic-rs = { version = "^0.5.0" }
-tokio = { version = "^1.50.0" }
+sonic-rs = { version = "~0.5.0" }

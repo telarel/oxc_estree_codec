@@ -572,8 +572,6 @@ name = "oxc_estree_compat"
 version = "0.1.0"
 dependencies = [
  "oxc",
- "oxc_sourcemap",
- "serde_json",
  "sonic-rs",
 ]
 
@@ -1074,7 +1072,9 @@ dependencies = [
 name = "test"
 version = "0.0.0"
 dependencies = [
+ "oxc",
  "oxc_estree_compat",
+ "sonic-rs",
 ]
 
 [[package]]
