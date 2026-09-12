@@ -1,4 +1,4 @@
-# OXC ESTree Codec
+# Oxc ESTree Codec
 
 A two-way codec between ESTree and oxc's typed AST.
 

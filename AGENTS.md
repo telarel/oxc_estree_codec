@@ -1,4 +1,4 @@
-# OXC ESTree Codec
+# Oxc ESTree Codec
 
 This is a codec between the JavaScript AST (ESTree) and the Rust AST (oxc).
 
