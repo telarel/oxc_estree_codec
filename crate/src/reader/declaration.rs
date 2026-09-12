@@ -139,7 +139,9 @@ pub(crate) fn params_in<'a>(
         cx.push(Seg::index(index));
 
         let step: Result<(), ReadError> = (|| {
-            if ty_of(item) == "RestElement" {
+            let item_ty: &str = ty_of(item);
+
+            if item_ty == "RestElement" {
                 let argument: BindingPattern<'a> =
                     cx.req(item, "argument", pattern::read_binding_pattern)?;
 
@@ -164,7 +166,7 @@ pub(crate) fn params_in<'a>(
                 return Ok(());
             }
 
-            if ty_of(item) == "Identifier"
+            if item_ty == "Identifier"
                 && item.get("name").and_then(Value::as_str) == Some("this")
             {
                 let param_span: Span = cx.span(item);
@@ -457,7 +459,9 @@ fn class_element<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<ClassElement<'a>, ReadError> {
-    match ty_of(node) {
+    let ty: &str = ty_of(node);
+
+    match ty {
         | "StaticBlock" => {
             let block: StaticBlock<'a> = StaticBlock::new(
                 cx.span(node),
@@ -468,17 +472,17 @@ fn class_element<'a>(
         },
         | "MethodDefinition" | "TSAbstractMethodDefinition" => {
             Ok(ClassElement::MethodDefinition(
-                cx.box_in(method_definition(cx, node)?),
+                cx.box_in(method_definition(cx, node, ty)?),
             ))
         },
         | "PropertyDefinition" | "TSAbstractPropertyDefinition" => {
             Ok(ClassElement::PropertyDefinition(
-                cx.box_in(property_definition(cx, node)?),
+                cx.box_in(property_definition(cx, node, ty)?),
             ))
         },
         | "AccessorProperty" | "TSAbstractAccessorProperty" => {
             Ok(ClassElement::AccessorProperty(
-                cx.box_in(accessor_property(cx, node)?),
+                cx.box_in(accessor_property(cx, node, ty)?),
             ))
         },
         | _ => Err(cx.err(node)),
@@ -488,6 +492,7 @@ fn class_element<'a>(
 fn method_definition<'a>(
     cx: &Cx<'a>,
     node: &Value,
+    ty: &str,
 ) -> Result<MethodDefinition<'a>, ReadError> {
     let span: Span = cx.span(node);
 
@@ -506,13 +511,12 @@ fn method_definition<'a>(
             | _ => return Err(cx.err(node)),
         };
 
-    let method_type: MethodDefinitionType =
-        match node.get("type").and_then(Value::as_str) {
-            | Some("TSAbstractMethodDefinition") => {
-                MethodDefinitionType::TSAbstractMethodDefinition
-            },
-            | _ => MethodDefinitionType::MethodDefinition,
-        };
+    let method_type: MethodDefinitionType = match ty {
+        | "TSAbstractMethodDefinition" => {
+            MethodDefinitionType::TSAbstractMethodDefinition
+        },
+        | _ => MethodDefinitionType::MethodDefinition,
+    };
 
     let method: MethodDefinition<'a> = MethodDefinition::new(
         span,
@@ -535,18 +539,18 @@ fn method_definition<'a>(
 fn property_definition<'a>(
     cx: &Cx<'a>,
     node: &Value,
+    ty: &str,
 ) -> Result<PropertyDefinition<'a>, ReadError> {
     let span: Span = cx.span(node);
 
     let key: PropertyKey<'a> = cx.property_key(node, "key")?;
 
-    let property_type: PropertyDefinitionType =
-        match node.get("type").and_then(Value::as_str) {
-            | Some("TSAbstractPropertyDefinition") => {
-                PropertyDefinitionType::TSAbstractPropertyDefinition
-            },
-            | _ => PropertyDefinitionType::PropertyDefinition,
-        };
+    let property_type: PropertyDefinitionType = match ty {
+        | "TSAbstractPropertyDefinition" => {
+            PropertyDefinitionType::TSAbstractPropertyDefinition
+        },
+        | _ => PropertyDefinitionType::PropertyDefinition,
+    };
 
     let property: PropertyDefinition<'a> = PropertyDefinition::new(
         span,
@@ -572,18 +576,18 @@ fn property_definition<'a>(
 fn accessor_property<'a>(
     cx: &Cx<'a>,
     node: &Value,
+    ty: &str,
 ) -> Result<AccessorProperty<'a>, ReadError> {
     let span: Span = cx.span(node);
 
     let key: PropertyKey<'a> = cx.property_key(node, "key")?;
 
-    let accessor_type: AccessorPropertyType =
-        match node.get("type").and_then(Value::as_str) {
-            | Some("TSAbstractAccessorProperty") => {
-                AccessorPropertyType::TSAbstractAccessorProperty
-            },
-            | _ => AccessorPropertyType::AccessorProperty,
-        };
+    let accessor_type: AccessorPropertyType = match ty {
+        | "TSAbstractAccessorProperty" => {
+            AccessorPropertyType::TSAbstractAccessorProperty
+        },
+        | _ => AccessorPropertyType::AccessorProperty,
+    };
 
     let property: AccessorProperty<'a> = AccessorProperty::new(
         span,

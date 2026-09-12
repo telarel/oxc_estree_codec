@@ -19,8 +19,9 @@ use crate::errors::read::ReadError;
 pub(crate) fn read_jsx_expression<'a>(
     cx: &Cx<'a>,
     node: &Value,
+    ty: &str,
 ) -> Result<Expression<'a>, ReadError> {
-    match ty_of(node) {
+    match ty {
         | "JSXElement" => {
             let span: Span = cx.span(node);
 
@@ -278,7 +279,9 @@ fn read_jsx_attribute_value<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<JSXAttributeValue<'a>, ReadError> {
-    match ty_of(node) {
+    let ty: &str = ty_of(node);
+
+    match ty {
         | "Literal" => Ok(JSXAttributeValue::StringLiteral(
             cx.box_in(literal::read_string_literal(cx, node)?),
         )),
@@ -288,7 +291,7 @@ fn read_jsx_attribute_value<'a>(
             ))
         },
         | "JSXElement" => {
-            let element: Expression<'a> = read_jsx_expression(cx, node)?;
+            let element: Expression<'a> = read_jsx_expression(cx, node, ty)?;
 
             match element {
                 | Expression::JSXElement(inner) => {
@@ -298,7 +301,7 @@ fn read_jsx_attribute_value<'a>(
             }
         },
         | "JSXFragment" => {
-            let fragment: Expression<'a> = read_jsx_expression(cx, node)?;
+            let fragment: Expression<'a> = read_jsx_expression(cx, node, ty)?;
 
             match fragment {
                 | Expression::JSXFragment(inner) => {
@@ -322,7 +325,9 @@ fn read_jsx_child<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<JSXChild<'a>, ReadError> {
-    match ty_of(node) {
+    let ty: &str = ty_of(node);
+
+    match ty {
         | "JSXText" => {
             let span: Span = cx.span(node);
 
@@ -339,7 +344,7 @@ fn read_jsx_child<'a>(
             Ok(JSXChild::Text(cx.box_in(text)))
         },
         | "JSXElement" => {
-            let element: Expression<'a> = read_jsx_expression(cx, node)?;
+            let element: Expression<'a> = read_jsx_expression(cx, node, ty)?;
 
             match element {
                 | Expression::JSXElement(inner) => Ok(JSXChild::Element(inner)),
@@ -347,7 +352,7 @@ fn read_jsx_child<'a>(
             }
         },
         | "JSXFragment" => {
-            let fragment: Expression<'a> = read_jsx_expression(cx, node)?;
+            let fragment: Expression<'a> = read_jsx_expression(cx, node, ty)?;
 
             match fragment {
                 | Expression::JSXFragment(inner) => {

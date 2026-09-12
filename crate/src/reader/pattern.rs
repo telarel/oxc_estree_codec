@@ -21,10 +21,12 @@ pub(crate) fn read_binding_pattern<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<BindingPattern<'a>, ReadError> {
-    match ty_of(node) {
+    let ty: &str = ty_of(node);
+
+    match ty {
         | "ArrayPattern" => array_pattern(cx, node),
         | "ObjectPattern" => object_pattern(cx, node),
-        | _ => nodes! { cx, node, BindingPattern :
+        | _ => nodes! { cx, node, ty, BindingPattern :
             "Identifier" => BindingIdentifier: BindingIdentifier::new [
                 cx.span(node),
                 cx.name(node)?,

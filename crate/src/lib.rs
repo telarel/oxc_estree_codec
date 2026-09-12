@@ -4,10 +4,10 @@ mod reader;
 
 use oxc::ast::ast::Program;
 
-use reader::engine::ProgramReader;
+use crate::reader::engine::ProgramReader;
 
-pub use _types::options::{FromJsonOptions, ToJsonOptions};
-pub use errors::read::ReadError;
+pub use crate::_types::options::{FromJsonOptions, ToJsonOptions};
+pub use crate::errors::read::ReadError;
 
 pub fn program_to_json(
     program: &Program<'_>,

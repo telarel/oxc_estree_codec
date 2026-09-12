@@ -28,7 +28,9 @@ pub(crate) fn read_ts_type<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSType<'a>, ReadError> {
-    match ty_of(node) {
+    let ty: &str = ty_of(node);
+
+    match ty {
         | "TSMappedType" => read_ts_mapped_type(cx, node),
         | "TSTypeOperator" => read_ts_type_operator(cx, node),
         | "TSImportType" => read_ts_import_type(cx, node),
@@ -75,7 +77,7 @@ pub(crate) fn read_ts_type<'a>(
         | "TSVoidKeyword" => {
             Ok(TSType::new_ts_void_keyword(cx.span(node), cx.builder()))
         },
-        | _ => nodes! { cx, node, TSType :
+        | _ => nodes! { cx, node, ty, TSType :
             "TSTypeReference" => TSTypeReference: TSTypeReference::new [
                 cx.span(node),
                 cx.req(node, "typeName", read_ts_type_name)?,

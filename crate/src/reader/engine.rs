@@ -579,12 +579,12 @@ pub(crate) fn ty_of(node: &Value) -> &str {
 
 macro_rules! nodes {
     (
-        $cx:ident, $node:ident, $out:ident :
-        $( $ty:literal => $variant:ident : $ctor:path [ $($arg:expr),* $(,)? ] ; )*
+        $cx:ident, $node:ident, $ty:expr, $out:ident :
+        $( $ty_lit:literal => $variant:ident : $ctor:path [ $($arg:expr),* $(,)? ] ; )*
     ) => {
-        match ty_of($node) {
+        match $ty {
             $(
-                $ty => {
+                $ty_lit => {
                     let value = $ctor($($arg,)* &$cx.builder);
                     Ok($out::$variant($cx.box_in(value)))
                 },

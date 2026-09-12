@@ -22,14 +22,16 @@ pub(crate) fn read_statement<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Statement<'a>, ReadError> {
-    match ty_of(node) {
+    let ty: &str = ty_of(node);
+
+    match ty {
         | "VariableDeclaration" => Ok(Statement::VariableDeclaration(
             cx.box_in(variable_declaration(cx, node)?),
         )),
         | "FunctionDeclaration"
         | "TSDeclareFunction"
         | "TSEmptyBodyFunctionExpression" => {
-            let function_type: FunctionType = match ty_of(node) {
+            let function_type: FunctionType = match ty {
                 | "TSDeclareFunction" => FunctionType::TSDeclareFunction,
                 | "TSEmptyBodyFunctionExpression" => {
                     FunctionType::TSEmptyBodyFunctionExpression
@@ -85,7 +87,7 @@ pub(crate) fn read_statement<'a>(
         )),
         | "BreakStatement" | "ContinueStatement" => {
             let label: Option<LabelIdentifier<'a>> = optional_label(cx, node)?;
-            match ty_of(node) {
+            match ty {
                 | "BreakStatement" => {
                     let stmt: BreakStatement<'a> =
                         BreakStatement::new(cx.span(node), label, cx.builder());
@@ -115,7 +117,7 @@ pub(crate) fn read_statement<'a>(
                 LabeledStatement::new(cx.span(node), label, body, cx.builder());
             Ok(Statement::LabeledStatement(cx.box_in(stmt)))
         },
-        | _ => nodes! { cx, node, Statement :
+        | _ => nodes! { cx, node, ty, Statement :
             "ExpressionStatement" => ExpressionStatement: ExpressionStatement::new [
                 cx.span(node),
                 cx.expr(node, "expression")?,

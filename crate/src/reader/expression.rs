@@ -32,7 +32,9 @@ pub(crate) fn read_expression<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Expression<'a>, ReadError> {
-    match ty_of(node) {
+    let ty: &str = ty_of(node);
+
+    match ty {
         | "Literal" => literal::read_literal(cx, node),
         | "Identifier" => pattern::read_identifier(cx, node),
         | "MemberExpression" => member_expression(cx, node),
@@ -54,9 +56,11 @@ pub(crate) fn read_expression<'a>(
         | "ChainExpression" => chain_expression(cx, node),
         | "ImportExpression" => import_expression(cx, node),
         | "MetaProperty" => meta_property(cx, node),
-        | "JSXElement" | "JSXFragment" => jsx::read_jsx_expression(cx, node),
+        | "JSXElement" | "JSXFragment" => {
+            jsx::read_jsx_expression(cx, node, ty)
+        },
         | "UpdateExpression" => update_expression(cx, node),
-        | _ => nodes! { cx, node, Expression :
+        | _ => nodes! { cx, node, ty, Expression :
             "ThisExpression" => ThisExpression: ThisExpression::new [
                 cx.span(node),
             ];
