@@ -1,0 +1,19 @@
+ls:
+    crate:
+        .dir: snake_case
+        .rs: snake_case
+    test:
+        .dir: snake_case
+        .rs: snake_case
+
+ignore:
+    - .git
+    - .github
+    - .vscode
+    - __MACOSX
+    - "**/__MACOSX"
+    - .DS_Store
+    - "**/.DS_Store"
+    - node_modules
+    - "**/node_modules"
+    - target

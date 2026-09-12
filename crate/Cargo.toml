@@ -1,0 +1,22 @@
+#:schema https://www.schemastore.org/cargo.json
+
+[package]
+name = "oxc_estree_compat"
+version = "0.1.0"
+authors = ["Alpheus <contact@alphe.us>"]
+edition = "2024"
+rust-version = "1.95.0"
+description = "A OXC ESTree compatible layer"
+readme = "README.md"
+homepage = "https://github.com/telarel/oxc_estree_compat"
+repository = "https://github.com/telarel/oxc_estree_compat"
+license = "MIT"
+keywords = ["oxc", "estree", "compat"]
+categories = ["compilers", "web-programming"]
+include = ["src/**", "Cargo.toml", "README.md"]
+
+[dependencies]
+oxc = { workspace = true, features = ["codegen", "serialize"] }
+oxc_sourcemap = { workspace = true }
+serde_json = { workspace = true }
+sonic-rs = { workspace = true }

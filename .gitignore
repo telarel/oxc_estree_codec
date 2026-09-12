@@ -1,0 +1,12 @@
+# Caches
+__MACOSX/
+.DS_Store
+
+# Modules
+node_modules/
+
+# Builds
+target/
+
+# Logs
+*.log

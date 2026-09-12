@@ -1,0 +1,9 @@
+#:schema https://www.schemastore.org/cargo.json
+
+[package]
+name = "test"
+edition = "2024"
+rust-version = "1.95.0"
+
+[dependencies]
+oxc_estree_compat = { workspace = true }
