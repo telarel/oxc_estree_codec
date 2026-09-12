@@ -1,0 +1,19 @@
+#:schema https://www.schemastore.org/cargo.json
+
+[package]
+name = "bench"
+edition = "2024"
+rust-version = "1.95.0"
+publish = false
+
+[dependencies]
+oxc = { workspace = true, features = ["codegen", "serialize"] }
+oxc_estree_compat = { workspace = true }
+sonic-rs = { workspace = true }
+
+[dev-dependencies]
+criterion = "~0.8.0"
+
+[[bench]]
+name = "estree"
+harness = false

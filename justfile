@@ -35,11 +35,15 @@ typos:
 
 # Lint code
 lint:
-    cargo clippy
+    cargo clippy --workspace --all-targets
 
 # Rust test
 test:
     cargo test -- --nocapture
+
+# Rust bench
+bench:
+    cargo bench -p bench -- --warm-up-time 1 --measurement-time 3
 
 # Check code
 check: fmt ls-lint typos lint test

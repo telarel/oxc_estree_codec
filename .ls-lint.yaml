@@ -5,6 +5,9 @@ ls:
     test:
         .dir: snake_case
         .rs: snake_case
+    bench:
+        .dir: snake_case
+        .rs: snake_case
 
 ignore:
     - .git
