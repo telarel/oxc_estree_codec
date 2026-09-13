@@ -62,6 +62,8 @@ impl<'a> ProgramReader<'a> {
 
         let comments: ArenaVec<'a, Comment> = ArenaVec::new_in(&self.builder);
 
+        let source_type: SourceType = resolve_source_type(source_type, json);
+
         let program: Program<'a> = Program::new(
             cx.span(json),
             source_type,
@@ -74,6 +76,21 @@ impl<'a> ProgramReader<'a> {
         );
 
         Ok(program)
+    }
+}
+
+fn resolve_source_type(
+    source_type: SourceType,
+    json: &Value,
+) -> SourceType {
+    if !source_type.is_unambiguous() {
+        return source_type;
+    }
+
+    match json.get("sourceType").and_then(Value::as_str) {
+        | Some("script") => source_type.with_script(true),
+        | Some("commonjs") => source_type.with_commonjs(true),
+        | _ => source_type.with_module(true),
     }
 }
 
