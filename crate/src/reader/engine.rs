@@ -309,15 +309,37 @@ impl<'a> Cx<'a> {
         &self,
         node: &Value,
     ) -> ReadError {
-        let ty: &str = node
-            .get("type")
-            .and_then(Value::as_str)
-            .unwrap_or("<missing type>");
+        ReadError::NodeUnsupported {
+            ty: ty_label(node),
+            path: self.path_string(),
+        }
+    }
 
-        ReadError::from_message(format!(
-            "unsupported ESTree node type `{ty}` at {}",
-            self.path_string()
-        ))
+    pub fn missing(
+        &self,
+        node: &Value,
+        field: &'static str,
+    ) -> ReadError {
+        ReadError::FieldMissing {
+            field,
+            ty: ty_label(node),
+            path: self.path_string(),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn invalid(
+        &self,
+        node: &Value,
+        field: &'static str,
+        expected: &'static str,
+    ) -> ReadError {
+        ReadError::FieldInvalid {
+            field,
+            expected,
+            ty: ty_label(node),
+            path: self.path_string(),
+        }
     }
 
     pub fn path_string(&self) -> String {
@@ -387,7 +409,7 @@ impl<'a> Cx<'a> {
         F: FnOnce(&Cx<'a>, &Value) -> Result<T, ReadError>,
     {
         let child_node: &Value =
-            node.get(field).ok_or_else(|| self.err(node))?;
+            node.get(field).ok_or_else(|| self.missing(node, field))?;
 
         self.push(Seg::Field(field));
 
@@ -572,14 +594,6 @@ impl<'a> Cx<'a> {
         )
     }
 
-    pub fn opt_annotation(
-        &self,
-        node: &Value,
-    ) -> Result<Option<ArenaBox<'a, TSTypeAnnotation<'a>>>, ReadError> {
-        self.opt(node, "typeAnnotation", ts_types::read_ts_type_annotation)
-            .map(|annotation| annotation.flatten())
-    }
-
     pub fn annotation(
         &self,
         node: &Value,
@@ -592,6 +606,12 @@ impl<'a> Cx<'a> {
 
 pub fn ty_of(node: &Value) -> &str {
     node.get("type").and_then(Value::as_str).unwrap_or("")
+}
+
+fn ty_label(node: &Value) -> String {
+    let ty: &str = ty_of(node);
+
+    if ty.is_empty() { "<missing type>".to_string() } else { ty.to_string() }
 }
 
 macro_rules! nodes {

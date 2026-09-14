@@ -279,7 +279,8 @@ fn catch_clause<'a>(
             let pattern: BindingPattern<'a> =
                 pattern::read_binding_pattern(cx, param_node)?;
 
-            let type_annotation = cx.opt_annotation(param_node)?;
+            let type_annotation =
+                cx.annotation(param_node, "typeAnnotation")?;
 
             Ok(CatchParameter::new(
                 cx.span(param_node),
@@ -338,10 +339,11 @@ fn variable_declaration<'a>(
             | Some("let") => VariableDeclarationKind::Let,
             | Some("const") => VariableDeclarationKind::Const,
             | Some(other) => {
-                return Err(ReadError::from_message(format!(
-                    "unsupported variable declaration kind `{other}` at {}",
-                    cx.path_string()
-                )));
+                return Err(ReadError::ValueUnsupported {
+                    kind: "variable declaration kind",
+                    value: other.to_string(),
+                    path: cx.path_string(),
+                });
             },
             | None => return Err(cx.err(node)),
         };
@@ -375,7 +377,7 @@ fn variable_declarator<'a>(
         let id: BindingPattern<'a> =
             pattern::read_binding_pattern(cx, id_node)?;
 
-        let type_annotation = cx.opt_annotation(id_node)?;
+        let type_annotation = cx.annotation(id_node, "typeAnnotation")?;
 
         Ok((id, type_annotation))
     })?;

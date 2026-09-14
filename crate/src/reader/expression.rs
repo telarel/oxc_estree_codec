@@ -490,10 +490,10 @@ fn import_expression<'a>(
                     | "source" => ImportPhase::Source,
                     | "defer" => ImportPhase::Defer,
                     | other => {
-                        return Err(ReadError::from_message(format!(
-                            "unsupported import phase `{other}` at {}",
-                            cx.path_string()
-                        )));
+                        return Err(ReadError::ImportPhaseUnsupported {
+                            phase: other.to_string(),
+                            path: cx.path_string(),
+                        });
                     },
                 };
 
@@ -567,10 +567,11 @@ pub fn binary_operator(
         | "in" => BinaryOperator::In,
         | "instanceof" => BinaryOperator::Instanceof,
         | _ => {
-            return Err(ReadError::from_message(format!(
-                "unsupported binary operator `{op}` at {}",
-                cx.path_string()
-            )));
+            return Err(ReadError::OperatorUnsupported {
+                kind: "binary operator",
+                operator: op.to_string(),
+                path: cx.path_string(),
+            });
         },
     };
 
@@ -588,10 +589,11 @@ pub fn logical_operator(
         | "&&" => LogicalOperator::And,
         | "??" => LogicalOperator::Coalesce,
         | _ => {
-            return Err(ReadError::from_message(format!(
-                "unsupported logical operator `{op}` at {}",
-                cx.path_string()
-            )));
+            return Err(ReadError::OperatorUnsupported {
+                kind: "logical operator",
+                operator: op.to_string(),
+                path: cx.path_string(),
+            });
         },
     };
 
@@ -613,10 +615,11 @@ pub fn unary_operator(
         | "void" => UnaryOperator::Void,
         | "delete" => UnaryOperator::Delete,
         | _ => {
-            return Err(ReadError::from_message(format!(
-                "unsupported unary operator `{op}` at {}",
-                cx.path_string()
-            )));
+            return Err(ReadError::OperatorUnsupported {
+                kind: "unary operator",
+                operator: op.to_string(),
+                path: cx.path_string(),
+            });
         },
     };
 
@@ -633,10 +636,11 @@ pub fn update_operator(
         | "++" => oxc::syntax::operator::UpdateOperator::Increment,
         | "--" => oxc::syntax::operator::UpdateOperator::Decrement,
         | _ => {
-            return Err(ReadError::from_message(format!(
-                "unsupported update operator `{op}` at {}",
-                cx.path_string()
-            )));
+            return Err(ReadError::OperatorUnsupported {
+                kind: "update operator",
+                operator: op.to_string(),
+                path: cx.path_string(),
+            });
         },
     };
 
@@ -669,10 +673,11 @@ pub fn assignment_operator(
         | "&&=" => oxc::syntax::operator::AssignmentOperator::LogicalAnd,
         | "??=" => oxc::syntax::operator::AssignmentOperator::LogicalNullish,
         | _ => {
-            return Err(ReadError::from_message(format!(
-                "unsupported assignment operator `{op}` at {}",
-                cx.path_string()
-            )));
+            return Err(ReadError::OperatorUnsupported {
+                kind: "assignment operator",
+                operator: op.to_string(),
+                path: cx.path_string(),
+            });
         },
     };
 

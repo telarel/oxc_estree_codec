@@ -140,7 +140,7 @@ pub fn read_ts_type<'a>(
                 cx.span(node),
                 cx.req(node, "parameterName", read_ts_type_predicate_name)?,
                 cx.flag(node, "asserts"),
-                cx.opt_annotation(node)?,
+                cx.annotation(node, "typeAnnotation")?,
             ];
             "TSTemplateLiteralType" => TSTemplateLiteralType: TSTemplateLiteralType::new [
                 cx.span(node),
@@ -161,11 +161,11 @@ fn read_ts_type_operator<'a>(
             | Some("unique") => TSTypeOperatorOperator::Unique,
             | Some("readonly") => TSTypeOperatorOperator::Readonly,
             | other => {
-                return Err(ReadError::from_message(format!(
-                    "unsupported type operator `{}` at {}",
-                    other.unwrap_or("<missing>"),
-                    cx.path_string()
-                )));
+                return Err(ReadError::OperatorUnsupported {
+                    kind: "type operator",
+                    operator: other.unwrap_or("<missing>").to_string(),
+                    path: cx.path_string(),
+                });
             },
         };
 
@@ -227,10 +227,11 @@ fn mapped_type_modifier(
             Some(TSMappedTypeModifierOperator::Minus)
         },
         | Some(other) => {
-            return Err(ReadError::from_message(format!(
-                "unsupported mapped type modifier `{other}` at {}",
-                cx.path_string()
-            )));
+            return Err(ReadError::ValueUnsupported {
+                kind: "mapped type modifier",
+                value: other.to_string(),
+                path: cx.path_string(),
+            });
         },
     };
 
@@ -541,7 +542,7 @@ fn read_ts_signature<'a>(
                 cx.flag(node, "optional"),
                 cx.flag(node, "readonly"),
                 key,
-                cx.opt_annotation(node)?,
+                cx.annotation(node, "typeAnnotation")?,
                 cx.builder(),
             );
 
@@ -558,11 +559,11 @@ fn read_ts_signature<'a>(
                     | Some("get") => TSMethodSignatureKind::Get,
                     | Some("set") => TSMethodSignatureKind::Set,
                     | other => {
-                        return Err(ReadError::from_message(format!(
-                            "unsupported method signature kind `{}` at {}",
-                            other.unwrap_or("<missing>"),
-                            cx.path_string()
-                        )));
+                        return Err(ReadError::ValueUnsupported {
+                            kind: "method signature kind",
+                            value: other.unwrap_or("<missing>").to_string(),
+                            path: cx.path_string(),
+                        });
                     },
                 };
 
@@ -632,7 +633,7 @@ fn read_ts_index_signature_name<'a>(
     let name: oxc::str::Ident<'a> = cx.name(node)?;
 
     let type_annotation: ArenaBox<'a, TSTypeAnnotation<'a>> =
-        cx.opt_annotation(node)?.ok_or_else(|| cx.err(node))?;
+        cx.annotation(node, "typeAnnotation")?.ok_or_else(|| cx.err(node))?;
 
     Ok(TSIndexSignatureName::new(span, name, type_annotation, cx.builder()))
 }

@@ -157,7 +157,7 @@ pub fn params_in<'a>(
                         cx.span(item),
                         read_decorators(cx, item)?,
                         rest_element,
-                        cx.opt_annotation(item)?,
+                        cx.annotation(item, "typeAnnotation")?,
                         cx.builder(),
                     );
 
@@ -174,7 +174,7 @@ pub fn params_in<'a>(
                 let this: TSThisParameter<'a> = TSThisParameter::new(
                     param_span,
                     param_span,
-                    cx.opt_annotation(item)?,
+                    cx.annotation(item, "typeAnnotation")?,
                     cx.builder(),
                 );
 
@@ -238,7 +238,8 @@ fn formal_parameter<'a>(
                     let pattern: BindingPattern<'a> =
                         pattern::read_binding_pattern(cx, left_node)?;
 
-                    let type_annotation = cx.opt_annotation(left_node)?;
+                    let type_annotation =
+                        cx.annotation(left_node, "typeAnnotation")?;
 
                     Ok((pattern, type_annotation))
                 })?;
@@ -262,7 +263,8 @@ fn formal_parameter<'a>(
             let pattern: BindingPattern<'a> =
                 pattern::read_binding_pattern(cx, parameter_node)?;
 
-            let type_annotation = cx.opt_annotation(parameter_node)?;
+            let type_annotation =
+                cx.annotation(parameter_node, "typeAnnotation")?;
 
             let param: FormalParameter<'a> = FormalParameter::new(
                 param_span,
@@ -293,7 +295,7 @@ fn formal_parameter<'a>(
             let pattern: BindingPattern<'a> =
                 pattern::read_binding_pattern(cx, left_node)?;
 
-            let type_annotation = cx.opt_annotation(left_node)?;
+            let type_annotation = cx.annotation(left_node, "typeAnnotation")?;
 
             Ok((pattern, type_annotation))
         })?;
@@ -316,7 +318,7 @@ fn formal_parameter<'a>(
 
     let pattern: BindingPattern<'a> = pattern::read_binding_pattern(cx, item)?;
 
-    let type_annotation = cx.opt_annotation(item)?;
+    let type_annotation = cx.annotation(item, "typeAnnotation")?;
 
     let param: FormalParameter<'a> = FormalParameter::new(
         param_span,
@@ -360,10 +362,11 @@ fn accessibility<'a>(
         | Some("private") => Ok(Some(TSAccessibility::Private)),
         | Some("protected") => Ok(Some(TSAccessibility::Protected)),
         | Some("public") => Ok(Some(TSAccessibility::Public)),
-        | Some(other) => Err(ReadError::from_message(format!(
-            "unsupported accessibility `{other}` at {}",
-            cx.path_string()
-        ))),
+        | Some(other) => Err(ReadError::ValueUnsupported {
+            kind: "accessibility",
+            value: other.to_string(),
+            path: cx.path_string(),
+        }),
     }
 }
 
@@ -557,7 +560,7 @@ fn property_definition<'a>(
         property_type,
         read_decorators(cx, node)?,
         key,
-        cx.opt_annotation(node)?,
+        cx.annotation(node, "typeAnnotation")?,
         cx.opt_expr(node, "value")?,
         cx.flag(node, "computed"),
         cx.flag(node, "static"),
@@ -594,7 +597,7 @@ fn accessor_property<'a>(
         accessor_type,
         read_decorators(cx, node)?,
         key,
-        cx.opt_annotation(node)?,
+        cx.annotation(node, "typeAnnotation")?,
         cx.opt_expr(node, "value")?,
         cx.flag(node, "computed"),
         cx.flag(node, "static"),
@@ -733,10 +736,11 @@ pub fn read_import_or_export_kind(
     match kind {
         | Some("type") => Ok(ImportOrExportKind::Type),
         | Some("value") | None => Ok(ImportOrExportKind::Value),
-        | Some(other) => Err(ReadError::from_message(format!(
-            "unsupported import/export kind `{other}` at {}",
-            cx.path_string()
-        ))),
+        | Some(other) => Err(ReadError::ValueUnsupported {
+            kind: "import/export kind",
+            value: other.to_string(),
+            path: cx.path_string(),
+        }),
     }
 }
 
@@ -1095,29 +1099,22 @@ pub fn read_ts_module_declaration<'a>(
 
                 Ok(Statement::TSGlobalDeclaration(cx.box_in(declaration)))
             } else {
-                let declaration_kind:
-                    TSNamespaceDeclarationKind = match kind {
-                        | "namespace" => {
-                            TSNamespaceDeclarationKind::Namespace
-                        },
-                        | "module" => {
-                            TSNamespaceDeclarationKind::Module
-                        },
-                        | other => {
-                            return Err(ReadError::from_message(format!(
-                                "unsupported module declaration kind `{other}` at {}",
-                                cx.path_string()
-                            )));
-                        },
-                    };
+                let declaration_kind: TSNamespaceDeclarationKind = match kind {
+                    | "namespace" => TSNamespaceDeclarationKind::Namespace,
+                    | "module" => TSNamespaceDeclarationKind::Module,
+                    | other => {
+                        return Err(ReadError::ValueUnsupported {
+                            kind: "module declaration kind",
+                            value: other.to_string(),
+                            path: cx.path_string(),
+                        });
+                    },
+                };
 
-                let declaration_body:
-                    TSNamespaceDeclarationBody<'a> = match body
-                    {
+                let declaration_body: TSNamespaceDeclarationBody<'a> =
+                    match body {
                         | Some(block) => {
-                            TSNamespaceDeclarationBody::TSModuleBlock(
-                                block,
-                            )
+                            TSNamespaceDeclarationBody::TSModuleBlock(block)
                         },
                         | None => return Err(cx.err(node)),
                     };
@@ -1144,31 +1141,28 @@ pub fn read_ts_module_declaration<'a>(
                 | None => return Err(cx.err(node)),
             };
 
-            let declaration_kind: TSNamespaceDeclarationKind =
-                match kind {
-                    | "namespace" => {
-                        TSNamespaceDeclarationKind::Namespace
-                    },
-                    | "module" => {
-                        TSNamespaceDeclarationKind::Module
-                    },
-                    | other => {
-                        return Err(ReadError::from_message(format!(
-                            "unsupported module declaration kind `{other}` at {}",
-                            cx.path_string()
-                        )));
-                    },
-                };
+            let declaration_kind: TSNamespaceDeclarationKind = match kind {
+                | "namespace" => TSNamespaceDeclarationKind::Namespace,
+                | "module" => TSNamespaceDeclarationKind::Module,
+                | other => {
+                    return Err(ReadError::ValueUnsupported {
+                        kind: "module declaration kind",
+                        value: other.to_string(),
+                        path: cx.path_string(),
+                    });
+                },
+            };
 
-            let mut current: Option<TSNamespaceDeclaration<'a>> =
-                None;
+            let mut current: Option<TSNamespaceDeclaration<'a>> = None;
 
             for (index, part) in parts.iter().enumerate().rev() {
                 let part_body: TSNamespaceDeclarationBody<'a> =
                     match (index + 1 == parts.len(), current.take()) {
                         | (true, _) => {
                             TSNamespaceDeclarationBody::TSModuleBlock(
-                                cx.box_in(block.clone_in(cx.builder().allocator())),
+                                cx.box_in(
+                                    block.clone_in(cx.builder().allocator()),
+                                ),
                             )
                         },
                         | (false, Some(inner)) => {

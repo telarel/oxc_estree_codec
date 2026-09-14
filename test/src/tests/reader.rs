@@ -2,6 +2,8 @@ use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 use sonic_rs::Value;
 
+use super::roundtrip::parse_value;
+
 #[test]
 fn test_read_rejects_unknown_import_phase() {
     let allocator: Allocator = Allocator::default();
@@ -29,7 +31,15 @@ fn test_read_rejects_unknown_import_phase() {
 
     let result = reader.read(&value, parser_return.program.source_type, "");
 
-    assert!(result.is_err(), "unknown phase must fail loudly");
+    match result {
+        | Err(oxc_estree_codec::ReadError::ImportPhaseUnsupported {
+            phase,
+            ..
+        }) => {
+            assert_eq!(phase, "bogus");
+        },
+        | other => panic!("expected ImportPhaseUnsupported, got {other:?}"),
+    }
 }
 
 #[test]
@@ -66,4 +76,78 @@ fn test_read_mutated_tree() {
     let out: String = oxc::codegen::Codegen::new().build(&program).code;
 
     assert!(out.contains("consolex"), "mutation must round-trip: {out}");
+}
+
+#[test]
+fn test_read_error_variant_unsupported_node() {
+    use oxc_estree_codec::ReadError;
+
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"BogusNode","start":0,"end":1}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    let result =
+        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+
+    match result {
+        | Err(ReadError::NodeUnsupported { ty, .. }) => {
+            assert_eq!(ty, "BogusNode")
+        },
+        | other => panic!("expected NodeUnsupported, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_read_error_variant_missing_field() {
+    use oxc_estree_codec::ReadError;
+
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"ExpressionStatement","start":0,"end":8,"expression":{"type":"CallExpression","start":0,"end":8,"arguments":[]}}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    let result =
+        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+
+    match result {
+        | Err(ReadError::FieldMissing { field, ty, .. }) => {
+            assert_eq!(field, "callee");
+            assert_eq!(ty, "CallExpression");
+        },
+        | other => panic!("expected FieldMissing, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_read_error_variant_unsupported_operator() {
+    use oxc_estree_codec::ReadError;
+
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"ExpressionStatement","start":0,"end":5,"expression":{"type":"BinaryExpression","start":0,"end":5,"operator":"***","left":{"type":"Identifier","name":"a","start":0,"end":1},"right":{"type":"Identifier","name":"b","start":4,"end":5}}}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    let result =
+        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+
+    match result {
+        | Err(ReadError::OperatorUnsupported { kind, operator, .. }) => {
+            assert_eq!(kind, "binary operator");
+            assert_eq!(operator, "***");
+        },
+        | other => panic!("expected OperatorUnsupported, got {other:?}"),
+    }
 }
