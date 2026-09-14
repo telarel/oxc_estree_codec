@@ -6,7 +6,7 @@ pub struct ReadError {
 }
 
 impl ReadError {
-    pub(crate) fn from_message(message: impl Into<String>) -> Self {
+    pub fn from_message(message: impl Into<String>) -> Self {
         Self { message: message.into() }
     }
 }

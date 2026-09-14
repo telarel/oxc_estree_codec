@@ -34,7 +34,7 @@ use super::statement;
 use super::ts_types;
 use crate::errors::read::ReadError;
 
-pub(crate) fn read_function<'a>(
+pub fn read_function<'a>(
     cx: &Cx<'a>,
     node: &Value,
     function_type: FunctionType,
@@ -85,7 +85,7 @@ pub(crate) fn read_function<'a>(
     Ok(function)
 }
 
-pub(crate) fn read_formal_parameters<'a>(
+pub fn read_formal_parameters<'a>(
     cx: &Cx<'a>,
     node: &Value,
     fallback_span: Span,
@@ -112,7 +112,7 @@ pub(crate) fn read_formal_parameters<'a>(
     params_in(cx, items, span, kind)
 }
 
-pub(crate) fn params_in<'a>(
+pub fn params_in<'a>(
     cx: &Cx<'a>,
     items: &[Value],
     span: Span,
@@ -334,7 +334,7 @@ fn formal_parameter<'a>(
     Ok(param)
 }
 
-pub(crate) fn read_decorators<'a>(
+pub fn read_decorators<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<oxc::allocator::Vec<'a, Decorator<'a>>, ReadError> {
@@ -367,7 +367,7 @@ fn accessibility<'a>(
     }
 }
 
-pub(crate) fn read_class<'a>(
+pub fn read_class<'a>(
     cx: &Cx<'a>,
     node: &Value,
     class_type: ClassType,
@@ -607,14 +607,14 @@ fn accessor_property<'a>(
     Ok(property)
 }
 
-pub(crate) fn read_class_declaration<'a>(
+pub fn read_class_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Class<'a>, ReadError> {
     read_class(cx, node, ClassType::ClassDeclaration)
 }
 
-pub(crate) fn read_import_declaration<'a>(
+pub fn read_import_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<ImportDeclaration<'a>, ReadError> {
@@ -696,14 +696,14 @@ fn local_binding_identifier<'a>(
     cx.req(node, "local", read_binding_identifier_at)
 }
 
-pub(crate) fn read_binding_identifier_at<'a>(
+pub fn read_binding_identifier_at<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<BindingIdentifier<'a>, ReadError> {
     Ok(BindingIdentifier::new(cx.span(node), cx.name(node)?, cx.builder()))
 }
 
-pub(crate) fn read_binding_identifier_field<'a>(
+pub fn read_binding_identifier_field<'a>(
     cx: &Cx<'a>,
     node: &Value,
     field: &'static str,
@@ -726,7 +726,7 @@ fn read_module_export_name<'a>(
     }
 }
 
-pub(crate) fn read_import_or_export_kind(
+pub fn read_import_or_export_kind(
     cx: &Cx<'_>,
     kind: Option<&str>,
 ) -> Result<ImportOrExportKind, ReadError> {
@@ -788,7 +788,7 @@ fn import_attribute<'a>(
     ))
 }
 
-pub(crate) fn read_export_named_declaration<'a>(
+pub fn read_export_named_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Statement<'a>, ReadError> {
@@ -873,7 +873,7 @@ fn export_specifier<'a>(
     ))
 }
 
-pub(crate) fn read_export_default_declaration<'a>(
+pub fn read_export_default_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<ExportDefaultDeclaration<'a>, ReadError> {
@@ -905,7 +905,7 @@ pub(crate) fn read_export_default_declaration<'a>(
     Ok(ExportDefaultDeclaration::new(cx.span(node), declaration, cx.builder()))
 }
 
-pub(crate) fn read_export_all_declaration<'a>(
+pub fn read_export_all_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<ExportAllDeclaration<'a>, ReadError> {
@@ -924,7 +924,7 @@ pub(crate) fn read_export_all_declaration<'a>(
     ))
 }
 
-pub(crate) fn read_ts_type_alias_declaration<'a>(
+pub fn read_ts_type_alias_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSTypeAliasDeclaration<'a>, ReadError> {
@@ -942,7 +942,7 @@ pub(crate) fn read_ts_type_alias_declaration<'a>(
     ))
 }
 
-pub(crate) fn read_ts_interface_declaration<'a>(
+pub fn read_ts_interface_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSInterfaceDeclaration<'a>, ReadError> {
@@ -992,7 +992,7 @@ fn ts_interface_heritage<'a>(
     ))
 }
 
-pub(crate) fn read_ts_enum_declaration<'a>(
+pub fn read_ts_enum_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSEnumDeclaration<'a>, ReadError> {
@@ -1057,7 +1057,7 @@ fn ts_enum_member_name<'a>(
     }
 }
 
-pub(crate) fn read_ts_module_declaration<'a>(
+pub fn read_ts_module_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Statement<'a>, ReadError> {
@@ -1255,7 +1255,7 @@ fn ts_module_block<'a>(
     ))
 }
 
-pub(crate) fn read_ts_import_equals_declaration<'a>(
+pub fn read_ts_import_equals_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSImportEqualsDeclaration<'a>, ReadError> {
@@ -1321,7 +1321,7 @@ fn ts_module_reference<'a>(
     }
 }
 
-pub(crate) fn read_ts_export_assignment<'a>(
+pub fn read_ts_export_assignment<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSExportAssignment<'a>, ReadError> {

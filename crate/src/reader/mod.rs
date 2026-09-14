@@ -6,5 +6,5 @@ mod pattern;
 mod statement;
 mod ts_types;
 
-pub(crate) mod engine;
-pub(crate) mod json;
+pub mod engine;
+pub mod json;

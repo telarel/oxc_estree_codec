@@ -28,7 +28,7 @@ use super::literal;
 use super::pattern;
 use crate::errors::read::ReadError;
 
-pub(crate) fn read_expression<'a>(
+pub fn read_expression<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Expression<'a>, ReadError> {
@@ -242,7 +242,7 @@ fn read_template_literal<'a>(
     ))
 }
 
-pub(crate) fn read_template_element<'a>(
+pub fn read_template_element<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TemplateElement<'a>, ReadError> {
@@ -537,7 +537,7 @@ fn meta_property<'a>(
     }
 }
 
-pub(crate) fn binary_operator(
+pub fn binary_operator(
     cx: &Cx<'_>,
     node: &Value,
 ) -> Result<BinaryOperator, ReadError> {
@@ -577,7 +577,7 @@ pub(crate) fn binary_operator(
     Ok(operator)
 }
 
-pub(crate) fn logical_operator(
+pub fn logical_operator(
     cx: &Cx<'_>,
     node: &Value,
 ) -> Result<LogicalOperator, ReadError> {
@@ -598,7 +598,7 @@ pub(crate) fn logical_operator(
     Ok(operator)
 }
 
-pub(crate) fn unary_operator(
+pub fn unary_operator(
     cx: &Cx<'_>,
     node: &Value,
 ) -> Result<UnaryOperator, ReadError> {
@@ -623,7 +623,7 @@ pub(crate) fn unary_operator(
     Ok(operator)
 }
 
-pub(crate) fn update_operator(
+pub fn update_operator(
     cx: &Cx<'_>,
     node: &Value,
 ) -> Result<oxc::syntax::operator::UpdateOperator, ReadError> {
@@ -643,7 +643,7 @@ pub(crate) fn update_operator(
     Ok(operator)
 }
 
-pub(crate) fn assignment_operator(
+pub fn assignment_operator(
     cx: &Cx<'_>,
     node: &Value,
 ) -> Result<oxc::syntax::operator::AssignmentOperator, ReadError> {

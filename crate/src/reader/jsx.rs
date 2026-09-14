@@ -16,7 +16,7 @@ use super::expression;
 use super::literal;
 use crate::errors::read::ReadError;
 
-pub(crate) fn read_jsx_expression<'a>(
+pub fn read_jsx_expression<'a>(
     cx: &Cx<'a>,
     node: &Value,
     ty: &str,
@@ -379,7 +379,7 @@ fn read_jsx_child<'a>(
     }
 }
 
-pub(crate) fn read_jsx_expression_container<'a>(
+pub fn read_jsx_expression_container<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<JSXExpressionContainer<'a>, ReadError> {

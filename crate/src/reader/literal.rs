@@ -10,7 +10,7 @@ use sonic_rs::JsonValueTrait;
 use super::engine::Cx;
 use crate::errors::read::ReadError;
 
-pub(crate) fn read_literal<'a>(
+pub fn read_literal<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Expression<'a>, ReadError> {
@@ -111,7 +111,7 @@ pub(crate) fn read_literal<'a>(
     }
 }
 
-pub(crate) fn read_string_literal<'a>(
+pub fn read_string_literal<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<StringLiteral<'a>, ReadError> {
@@ -134,7 +134,7 @@ pub(crate) fn read_string_literal<'a>(
     }
 }
 
-pub(crate) fn regexp_flags(flags: &str) -> RegExpFlags {
+pub fn regexp_flags(flags: &str) -> RegExpFlags {
     let mut bits: RegExpFlags = RegExpFlags::empty();
 
     for flag in flags.chars() {

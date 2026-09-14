@@ -20,7 +20,7 @@ use super::statement;
 use super::ts_types;
 
 pub struct ProgramReader<'a> {
-    pub(crate) builder: AstBuilder<'a>,
+    pub builder: AstBuilder<'a>,
 }
 
 impl<'a> ProgramReader<'a> {
@@ -125,7 +125,7 @@ fn directive_if_any<'a>(
     Ok(Some(directive))
 }
 
-pub(crate) fn split_directives_and_statements<'a>(
+pub fn split_directives_and_statements<'a>(
     cx: &Cx<'a>,
     parent_node: &Value,
     directives: &mut ArenaVec<'a, Directive<'a>>,
@@ -159,7 +159,7 @@ pub(crate) fn split_directives_and_statements<'a>(
     Ok(())
 }
 
-pub(crate) fn read_function_body<'a>(
+pub fn read_function_body<'a>(
     cx: &Cx<'a>,
     body_node: &Value,
 ) -> Result<FunctionBody<'a>, ReadError> {
@@ -205,30 +205,30 @@ fn read_hashbang<'a>(
 }
 
 #[derive(Clone, Copy)]
-pub(crate) enum Seg {
+pub enum Seg {
     Field(&'static str),
     Index(usize),
 }
 
 impl Seg {
-    pub(crate) fn field(name: &'static str) -> Seg {
+    pub fn field(name: &'static str) -> Seg {
         Seg::Field(name)
     }
 
-    pub(crate) fn index(value: usize) -> Seg {
+    pub fn index(value: usize) -> Seg {
         Seg::Index(value)
     }
 }
 
-pub(crate) struct Cx<'a> {
-    pub(crate) builder: AstBuilder<'a>,
+pub struct Cx<'a> {
+    pub builder: AstBuilder<'a>,
     trail: RefCell<Vec<Seg>>,
 }
 
 macro_rules! req_readers {
     ($($name:ident => $reader:path : $out:ty;)*) => {
         $(
-            pub(crate) fn $name(
+            pub fn $name(
                 &self,
                 node: &Value,
                 field: &'static str,
@@ -242,7 +242,7 @@ macro_rules! req_readers {
 macro_rules! opt_readers {
     ($($name:ident => $reader:path : $out:ty;)*) => {
         $(
-            pub(crate) fn $name(
+            pub fn $name(
                 &self,
                 node: &Value,
                 field: &'static str,
@@ -256,7 +256,7 @@ macro_rules! opt_readers {
 macro_rules! list_readers {
     ($($name:ident => $reader:path : $out:ty;)*) => {
         $(
-            pub(crate) fn $name(
+            pub fn $name(
                 &self,
                 node: &Value,
                 field: &'static str,
@@ -279,7 +279,7 @@ impl<'a> Cx<'a> {
         Cx { builder, trail }
     }
 
-    pub(crate) fn span(
+    pub fn span(
         &self,
         node: &Value,
     ) -> Span {
@@ -294,18 +294,18 @@ impl<'a> Cx<'a> {
         Span::new(start, end)
     }
 
-    pub(crate) fn builder(&self) -> &AstBuilder<'a> {
+    pub fn builder(&self) -> &AstBuilder<'a> {
         &self.builder
     }
 
-    pub(crate) fn box_in<T>(
+    pub fn box_in<T>(
         &self,
         value: T,
     ) -> ArenaBox<'a, T> {
         ArenaBox::new_in(value, &self.builder)
     }
 
-    pub(crate) fn err(
+    pub fn err(
         &self,
         node: &Value,
     ) -> ReadError {
@@ -320,7 +320,7 @@ impl<'a> Cx<'a> {
         ))
     }
 
-    pub(crate) fn path_string(&self) -> String {
+    pub fn path_string(&self) -> String {
         let trail: Vec<Seg> = self.trail.borrow().clone();
 
         let mut path: String = String::new();
@@ -349,18 +349,18 @@ impl<'a> Cx<'a> {
         path
     }
 
-    pub(crate) fn push(
+    pub fn push(
         &self,
         seg: Seg,
     ) {
         self.trail.borrow_mut().push(seg);
     }
 
-    pub(crate) fn pop(&self) {
+    pub fn pop(&self) {
         self.trail.borrow_mut().pop();
     }
 
-    pub(crate) fn child<T, F>(
+    pub fn child<T, F>(
         &self,
         seg: Seg,
         f: F,
@@ -377,7 +377,7 @@ impl<'a> Cx<'a> {
         result
     }
 
-    pub(crate) fn req<T, F>(
+    pub fn req<T, F>(
         &self,
         node: &Value,
         field: &'static str,
@@ -398,7 +398,7 @@ impl<'a> Cx<'a> {
         result
     }
 
-    pub(crate) fn opt<T, F>(
+    pub fn opt<T, F>(
         &self,
         node: &Value,
         field: &'static str,
@@ -418,7 +418,7 @@ impl<'a> Cx<'a> {
         }
     }
 
-    pub(crate) fn list<T, F>(
+    pub fn list<T, F>(
         &self,
         node: &Value,
         field: &'static str,
@@ -452,7 +452,7 @@ impl<'a> Cx<'a> {
         Ok(items)
     }
 
-    pub(crate) fn list_opt<T, F>(
+    pub fn list_opt<T, F>(
         &self,
         node: &Value,
         field: &'static str,
@@ -469,7 +469,7 @@ impl<'a> Cx<'a> {
         }
     }
 
-    pub(crate) fn opt_box<T, F>(
+    pub fn opt_box<T, F>(
         &self,
         node: &Value,
         field: &'static str,
@@ -481,7 +481,7 @@ impl<'a> Cx<'a> {
         self.opt(node, field, |cx, child| Ok(cx.box_in(f(cx, child)?)))
     }
 
-    pub(crate) fn flag(
+    pub fn flag(
         &self,
         node: &Value,
         field: &'static str,
@@ -489,7 +489,7 @@ impl<'a> Cx<'a> {
         node.get(field).and_then(Value::as_bool).unwrap_or(false)
     }
 
-    pub(crate) fn flag_or(
+    pub fn flag_or(
         &self,
         node: &Value,
         field: &'static str,
@@ -498,7 +498,7 @@ impl<'a> Cx<'a> {
         node.get(field).and_then(Value::as_bool).unwrap_or(default)
     }
 
-    pub(crate) fn name(
+    pub fn name(
         &self,
         node: &Value,
     ) -> Result<oxc::str::Ident<'a>, ReadError> {
@@ -510,7 +510,7 @@ impl<'a> Cx<'a> {
         Ok(oxc::str::Ident::from_str_in(name, &self.builder))
     }
 
-    pub(crate) fn text(
+    pub fn text(
         &self,
         node: &Value,
         field: &'static str,
@@ -547,7 +547,7 @@ impl<'a> Cx<'a> {
         ts_types => ts_types::read_ts_type : TSType<'a>;
     }
 
-    pub(crate) fn opt_type_arguments(
+    pub fn opt_type_arguments(
         &self,
         node: &Value,
     ) -> Result<Option<ArenaBox<'a, TSTypeParameterInstantiation<'a>>>, ReadError>
@@ -560,7 +560,7 @@ impl<'a> Cx<'a> {
         .map(|instantiation| instantiation.map(|value| self.box_in(value)))
     }
 
-    pub(crate) fn opt_type_parameters(
+    pub fn opt_type_parameters(
         &self,
         node: &Value,
     ) -> Result<Option<ArenaBox<'a, TSTypeParameterDeclaration<'a>>>, ReadError>
@@ -572,7 +572,7 @@ impl<'a> Cx<'a> {
         )
     }
 
-    pub(crate) fn opt_annotation(
+    pub fn opt_annotation(
         &self,
         node: &Value,
     ) -> Result<Option<ArenaBox<'a, TSTypeAnnotation<'a>>>, ReadError> {
@@ -580,7 +580,7 @@ impl<'a> Cx<'a> {
             .map(|annotation| annotation.flatten())
     }
 
-    pub(crate) fn annotation(
+    pub fn annotation(
         &self,
         node: &Value,
         field: &'static str,
@@ -590,7 +590,7 @@ impl<'a> Cx<'a> {
     }
 }
 
-pub(crate) fn ty_of(node: &Value) -> &str {
+pub fn ty_of(node: &Value) -> &str {
     node.get("type").and_then(Value::as_str).unwrap_or("")
 }
 

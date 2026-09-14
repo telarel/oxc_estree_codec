@@ -17,7 +17,7 @@ use super::engine::{Cx, nodes, ty_of};
 use super::expression::read_expression;
 use crate::errors::read::ReadError;
 
-pub(crate) fn read_binding_pattern<'a>(
+pub fn read_binding_pattern<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<BindingPattern<'a>, ReadError> {
@@ -129,7 +129,7 @@ fn binding_property<'a>(
     ))
 }
 
-pub(crate) fn read_assignment_target<'a>(
+pub fn read_assignment_target<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<AssignmentTarget<'a>, ReadError> {
@@ -340,7 +340,7 @@ fn expression_to_assignment_target<'a>(
     }
 }
 
-pub(crate) fn read_property_key<'a>(
+pub fn read_property_key<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<PropertyKey<'a>, ReadError> {
@@ -354,7 +354,7 @@ pub(crate) fn read_property_key<'a>(
     Ok(PropertyKey::from(read_expression(cx, node)?))
 }
 
-pub(crate) fn read_identifier<'a>(
+pub fn read_identifier<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Expression<'a>, ReadError> {

@@ -18,7 +18,7 @@ use super::expression;
 use super::pattern;
 use crate::errors::read::ReadError;
 
-pub(crate) fn read_statement<'a>(
+pub fn read_statement<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Statement<'a>, ReadError> {
@@ -255,7 +255,7 @@ fn try_statement<'a>(
     Ok(stmt)
 }
 
-pub(crate) fn block_statement<'a>(
+pub fn block_statement<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<BlockStatement<'a>, ReadError> {

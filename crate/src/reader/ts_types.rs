@@ -24,7 +24,7 @@ use super::engine::{Cx, Seg, nodes, ty_of};
 use super::expression;
 use crate::errors::read::ReadError;
 
-pub(crate) fn read_ts_type<'a>(
+pub fn read_ts_type<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSType<'a>, ReadError> {
@@ -237,7 +237,7 @@ fn mapped_type_modifier(
     Ok(modifier)
 }
 
-pub(crate) fn read_ts_type_name<'a>(
+pub fn read_ts_type_name<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSTypeName<'a>, ReadError> {
@@ -265,7 +265,7 @@ pub(crate) fn read_ts_type_name<'a>(
     }
 }
 
-pub(crate) fn read_ts_type_name_from_expression<'a>(
+pub fn read_ts_type_name_from_expression<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSTypeName<'a>, ReadError> {
@@ -294,7 +294,7 @@ pub(crate) fn read_ts_type_name_from_expression<'a>(
     }
 }
 
-pub(crate) fn read_ts_type_parameter_instantiation<'a>(
+pub fn read_ts_type_parameter_instantiation<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSTypeParameterInstantiation<'a>, ReadError> {
@@ -305,7 +305,7 @@ pub(crate) fn read_ts_type_parameter_instantiation<'a>(
     ))
 }
 
-pub(crate) fn read_ts_type_annotation<'a>(
+pub fn read_ts_type_annotation<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Option<ArenaBox<'a, TSTypeAnnotation<'a>>>, ReadError> {
@@ -320,7 +320,7 @@ pub(crate) fn read_ts_type_annotation<'a>(
     Ok(Some(cx.box_in(TSTypeAnnotation::new(span, ty, cx.builder()))))
 }
 
-pub(crate) fn read_ts_type_parameter_declaration<'a>(
+pub fn read_ts_type_parameter_declaration<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<ArenaBox<'a, TSTypeParameterDeclaration<'a>>, ReadError> {
@@ -331,7 +331,7 @@ pub(crate) fn read_ts_type_parameter_declaration<'a>(
     )))
 }
 
-pub(crate) fn read_ts_type_parameter<'a>(
+pub fn read_ts_type_parameter<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<TSTypeParameter<'a>, ReadError> {
@@ -354,14 +354,14 @@ pub(crate) fn read_ts_type_parameter<'a>(
     Ok(parameter)
 }
 
-pub(crate) fn read_binding_identifier<'a>(
+pub fn read_binding_identifier<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<BindingIdentifier<'a>, ReadError> {
     Ok(BindingIdentifier::new(cx.span(node), cx.name(node)?, cx.builder()))
 }
 
-pub(crate) fn read_identifier_name<'a>(
+pub fn read_identifier_name<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<IdentifierName<'a>, ReadError> {
@@ -519,7 +519,7 @@ fn read_ts_tuple_element<'a>(
     Ok(TSTupleElement::from(read_ts_type(cx, node)?))
 }
 
-pub(crate) fn read_ts_signatures<'a>(
+pub fn read_ts_signatures<'a>(
     cx: &Cx<'a>,
     node: &Value,
     field: &'static str,
