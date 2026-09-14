@@ -256,8 +256,12 @@ pub fn read_template_element<'a>(
 
     let value_node: &Value = node.get("value").ok_or_else(|| cx.err(node))?;
 
-    let raw: &str =
-        value_node.get("raw").and_then(Value::as_str).unwrap_or_default();
+    let raw_node: &Value =
+        value_node.get("raw").ok_or_else(|| cx.missing(value_node, "raw"))?;
+
+    let raw: &str = raw_node
+        .as_str()
+        .ok_or_else(|| cx.invalid(value_node, "raw", "a string"))?;
 
     let raw_str: oxc::str::Str<'a> =
         oxc::str::Str::from_str_in(raw, cx.builder());
@@ -514,17 +518,17 @@ fn meta_property<'a>(
 ) -> Result<Expression<'a>, ReadError> {
     let span: Span = cx.span(node);
 
-    let meta_name: &str = node
-        .get("meta")
-        .and_then(|m| m.get("name"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
+    let meta_node: &Value =
+        node.get("meta").ok_or_else(|| cx.missing(node, "meta"))?;
 
-    let property_name: &str = node
-        .get("property")
-        .and_then(|p| p.get("name"))
-        .and_then(Value::as_str)
-        .unwrap_or("");
+    let property_node: &Value =
+        node.get("property").ok_or_else(|| cx.missing(node, "property"))?;
+
+    let meta_name: &str =
+        meta_node.get("name").and_then(Value::as_str).unwrap_or_default();
+
+    let property_name: &str =
+        property_node.get("name").and_then(Value::as_str).unwrap_or_default();
 
     if meta_name == "import" && property_name == "meta" {
         let meta: ImportMeta = ImportMeta::new(span, cx.builder());

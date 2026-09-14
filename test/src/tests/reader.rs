@@ -151,3 +151,160 @@ fn test_read_error_variant_unsupported_operator() {
         | other => panic!("expected OperatorUnsupported, got {other:?}"),
     }
 }
+
+#[test]
+fn test_read_rejects_identifier_without_name() {
+    use oxc_estree_codec::ReadError;
+
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"ExpressionStatement","start":0,"end":1,"expression":{"type":"Identifier","start":0,"end":1}}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    let result =
+        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+
+    match result {
+        | Err(ReadError::FieldMissing { field, .. }) => {
+            assert_eq!(field, "name")
+        },
+        | other => panic!("expected FieldMissing for `name`, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_read_rejects_identifier_with_non_string_name() {
+    use oxc_estree_codec::ReadError;
+
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"ExpressionStatement","start":0,"end":1,"expression":{"type":"Identifier","name":42,"start":0,"end":1}}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    let result =
+        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+
+    match result {
+        | Err(ReadError::FieldInvalid { field, expected, .. }) => {
+            assert_eq!(field, "name");
+            assert_eq!(expected, "a string");
+        },
+        | other => panic!("expected FieldInvalid for `name`, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_read_rejects_hashbang_with_non_string_value() {
+    use oxc_estree_codec::ReadError;
+
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"script","hashbang":{"type":"Hashbang","value":true,"start":0,"end":20},"body":[]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    let result =
+        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+
+    match result {
+        | Err(ReadError::FieldInvalid { field, .. }) => {
+            assert_eq!(field, "value")
+        },
+        | other => {
+            panic!("expected FieldInvalid for hashbang `value`, got {other:?}")
+        },
+    }
+}
+
+#[test]
+fn test_read_rejects_string_literal_without_value() {
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"ExpressionStatement","start":0,"end":5,"expression":{"type":"Literal","start":0,"end":5,"raw":"\"abc\""}}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    assert!(
+        reader
+            .read(&value, SourceType::from_path("a.js").unwrap(), "")
+            .is_err(),
+        "string literal without `value` must fail loudly"
+    );
+}
+
+#[test]
+fn test_read_rejects_regexp_without_pattern() {
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"ExpressionStatement","start":0,"end":10,"expression":{"type":"Literal","start":0,"end":10,"value":0,"raw":"/ab/g","regex":{"flags":"g"}}}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    let result =
+        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+
+    assert!(result.is_err(), "regexp without `pattern` must fail loudly");
+}
+
+#[test]
+fn test_read_rejects_bigint_without_value() {
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"ExpressionStatement","start":0,"end":6,"expression":{"type":"Literal","start":0,"end":6,"value":null,"raw":"1n"}}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    assert!(
+        reader
+            .read(&value, SourceType::from_path("a.js").unwrap(), "")
+            .is_err(),
+        "bigint literal without `bigint` field must fail loudly"
+    );
+}
+
+#[test]
+fn test_read_rejects_meta_property_without_names() {
+    use oxc_estree_codec::ReadError;
+
+    let allocator: Allocator = Allocator::default();
+
+    let value: Value = parse_value(
+        r#"{"type":"Program","sourceType":"module","body":[{"type":"ExpressionStatement","start":0,"end":11,"expression":{"type":"MetaProperty","start":0,"end":11,"meta":{"type":"Identifier","name":"import","start":0,"end":6}}}]}"#,
+    );
+
+    let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
+        oxc_estree_codec::__internal::ProgramReader::new(&allocator);
+
+    let result =
+        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+
+    match result {
+        | Err(ReadError::FieldMissing { field, ty, .. }) => {
+            assert_eq!(field, "property");
+            assert_eq!(ty, "MetaProperty");
+        },
+        | other => {
+            panic!("expected FieldMissing for `property`, got {other:?}")
+        },
+    }
+}

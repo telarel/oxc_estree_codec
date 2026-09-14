@@ -1069,7 +1069,12 @@ pub fn read_ts_module_declaration<'a>(
 
     let declare: bool = cx.flag(node, "declare");
 
-    let kind: &str = node.get("kind").and_then(Value::as_str).unwrap_or("");
+    let kind_node: &Value =
+        node.get("kind").ok_or_else(|| cx.missing(node, "kind"))?;
+
+    let kind: &str = kind_node
+        .as_str()
+        .ok_or_else(|| cx.invalid(node, "kind", "a string"))?;
 
     let body: Option<oxc::allocator::Box<'a, TSModuleBlock<'a>>> =
         cx.opt_box(node, "body", ts_module_block)?;

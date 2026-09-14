@@ -105,8 +105,10 @@ fn directive_if_any<'a>(
         return Ok(None);
     }
 
-    let directive_str: &str =
-        node.get("directive").and_then(Value::as_str).unwrap_or_default();
+    let directive_str: &str = node
+        .get("directive")
+        .and_then(Value::as_str)
+        .ok_or_else(|| cx.invalid(node, "directive", "a string"))?;
 
     let directive_atom: oxc::str::Str<'a> =
         oxc::str::Str::from_str_in(directive_str, cx.builder());
@@ -192,8 +194,12 @@ fn read_hashbang<'a>(
     cx: &Cx<'a>,
     node: &Value,
 ) -> Result<Hashbang<'a>, ReadError> {
-    let value: &str =
-        node.get("value").and_then(Value::as_str).unwrap_or_default();
+    let value_node: &Value =
+        node.get("value").ok_or_else(|| cx.missing(node, "value"))?;
+
+    let value: &str = value_node
+        .as_str()
+        .ok_or_else(|| cx.invalid(node, "value", "a string"))?;
 
     let value_atom: oxc::str::Str<'a> =
         oxc::str::Str::from_str_in(value, cx.builder());
@@ -279,6 +285,8 @@ impl<'a> Cx<'a> {
         Cx { builder, trail }
     }
 
+    // Spans are optional in some ESTree producers; absent `start`/`end`
+    // degrade to 0/0 rather than failing the read.
     pub fn span(
         &self,
         node: &Value,
@@ -327,7 +335,6 @@ impl<'a> Cx<'a> {
         }
     }
 
-    #[allow(dead_code)]
     pub fn invalid(
         &self,
         node: &Value,
@@ -503,6 +510,7 @@ impl<'a> Cx<'a> {
         self.opt(node, field, |cx, child| Ok(cx.box_in(f(cx, child)?)))
     }
 
+    // Legacy ESTree omits boolean flags that are false; absence reads as `false`.
     pub fn flag(
         &self,
         node: &Value,
@@ -511,6 +519,7 @@ impl<'a> Cx<'a> {
         node.get(field).and_then(Value::as_bool).unwrap_or(false)
     }
 
+    // Legacy ESTree omits boolean flags that are false; absence reads as `false`.
     pub fn flag_or(
         &self,
         node: &Value,
@@ -525,9 +534,11 @@ impl<'a> Cx<'a> {
         node: &Value,
     ) -> Result<oxc::str::Ident<'a>, ReadError> {
         let name_node: &Value =
-            node.get("name").ok_or_else(|| self.err(node))?;
+            node.get("name").ok_or_else(|| self.missing(node, "name"))?;
 
-        let name: &str = name_node.as_str().unwrap_or_default();
+        let name: &str = name_node
+            .as_str()
+            .ok_or_else(|| self.invalid(node, "name", "a string"))?;
 
         Ok(oxc::str::Ident::from_str_in(name, &self.builder))
     }
@@ -536,11 +547,15 @@ impl<'a> Cx<'a> {
         &self,
         node: &Value,
         field: &'static str,
-    ) -> oxc::str::Str<'a> {
-        let value: &str =
-            node.get(field).and_then(Value::as_str).unwrap_or_default();
+    ) -> Result<oxc::str::Str<'a>, ReadError> {
+        let value_node: &Value =
+            node.get(field).ok_or_else(|| self.missing(node, field))?;
 
-        oxc::str::Str::from_str_in(value, &self.builder)
+        let value: &str = value_node
+            .as_str()
+            .ok_or_else(|| self.invalid(node, field, "a string"))?;
+
+        Ok(oxc::str::Str::from_str_in(value, &self.builder))
     }
 
     req_readers! {

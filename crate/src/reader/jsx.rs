@@ -143,8 +143,12 @@ fn read_jsx_member_expression_object<'a>(
 ) -> Result<JSXMemberExpressionObject<'a>, ReadError> {
     match ty_of(node) {
         | "JSXIdentifier" | "Identifier" => {
-            let name: &str =
-                node.get("name").and_then(Value::as_str).unwrap_or_default();
+            let name_node: &Value =
+                node.get("name").ok_or_else(|| cx.missing(node, "name"))?;
+
+            let name: &str = name_node
+                .as_str()
+                .ok_or_else(|| cx.invalid(node, "name", "a string"))?;
 
             if name == "this" {
                 let this: ThisExpression =
@@ -155,7 +159,8 @@ fn read_jsx_member_expression_object<'a>(
                 ));
             }
 
-            let name_str: oxc::str::Str<'a> = cx.text(node, "name");
+            let name_str: oxc::str::Str<'a> =
+                oxc::str::Str::from_str_in(name, cx.builder());
 
             let reference: IdentifierReference<'a> =
                 IdentifierReference::new(cx.span(node), name_str, cx.builder());
@@ -214,12 +219,15 @@ fn read_jsx_identifier<'a>(
 ) -> Result<JSXIdentifier<'a>, ReadError> {
     let span: Span = cx.span(node);
 
-    let name_node: &Value = node.get("name").ok_or_else(|| cx.err(node))?;
+    let name_node: &Value =
+        node.get("name").ok_or_else(|| cx.missing(node, "name"))?;
 
-    let name_str: oxc::str::Str<'a> = oxc::str::Str::from_str_in(
-        name_node.as_str().unwrap_or_default(),
-        cx.builder(),
-    );
+    let name: &str = name_node
+        .as_str()
+        .ok_or_else(|| cx.invalid(node, "name", "a string"))?;
+
+    let name_str: oxc::str::Str<'a> =
+        oxc::str::Str::from_str_in(name, cx.builder());
 
     let identifier: JSXIdentifier<'a> =
         JSXIdentifier::new(span, name_str, cx.builder());
@@ -331,7 +339,7 @@ fn read_jsx_child<'a>(
         | "JSXText" => {
             let span: Span = cx.span(node);
 
-            let value_str: oxc::str::Str<'a> = cx.text(node, "value");
+            let value_str: oxc::str::Str<'a> = cx.text(node, "value")?;
 
             let raw: Option<oxc::str::Str<'a>> = node
                 .get("raw")

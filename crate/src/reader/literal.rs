@@ -19,11 +19,19 @@ pub fn read_literal<'a>(
     let raw: Option<&str> = node.get("raw").and_then(Value::as_str);
 
     if let Some(regex) = node.get("regex").filter(|r| r.is_object()) {
-        let pattern: &str =
-            regex.get("pattern").and_then(Value::as_str).unwrap_or("");
+        let pattern_node: &Value =
+            regex.get("pattern").ok_or_else(|| cx.missing(regex, "pattern"))?;
 
-        let flags: &str =
-            regex.get("flags").and_then(Value::as_str).unwrap_or("");
+        let pattern: &str = pattern_node
+            .as_str()
+            .ok_or_else(|| cx.invalid(regex, "pattern", "a string"))?;
+
+        let flags_node: &Value =
+            regex.get("flags").ok_or_else(|| cx.missing(regex, "flags"))?;
+
+        let flags: &str = flags_node
+            .as_str()
+            .ok_or_else(|| cx.invalid(regex, "flags", "a string"))?;
 
         let pattern_text: &'a str = cx.builder.allocator().alloc_str(pattern);
 
@@ -34,18 +42,18 @@ pub fn read_literal<'a>(
             flags: flags_bits,
         };
 
-        let raw_str: oxc::str::Str<'a> =
-            oxc::str::Str::from_str_in(raw.unwrap_or_default(), cx.builder());
+        let raw_str: Option<oxc::str::Str<'a>> =
+            raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
 
         let lit: RegExpLiteral<'a> =
-            RegExpLiteral::new(span, regex, Some(raw_str), cx.builder());
+            RegExpLiteral::new(span, regex, raw_str, cx.builder());
 
         return Ok(Expression::RegExpLiteral(cx.box_in(lit)));
     }
 
     if let Some(bigint) = node.get("bigint").filter(|b| b.is_str()) {
-        let raw_str: oxc::str::Str<'a> =
-            oxc::str::Str::from_str_in(raw.unwrap_or_default(), cx.builder());
+        let raw_str: Option<oxc::str::Str<'a>> =
+            raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
 
         let value_str: oxc::str::Str<'a> = oxc::str::Str::from_str_in(
             bigint.as_str().unwrap_or_default(),
@@ -55,13 +63,8 @@ pub fn read_literal<'a>(
         let base: oxc::syntax::number::BigintBase =
             bigint_base(raw.unwrap_or_default());
 
-        let lit: BigIntLiteral<'a> = BigIntLiteral::new(
-            span,
-            value_str,
-            Some(raw_str),
-            base,
-            cx.builder(),
-        );
+        let lit: BigIntLiteral<'a> =
+            BigIntLiteral::new(span, value_str, raw_str, base, cx.builder());
 
         return Ok(Expression::BigIntLiteral(cx.box_in(lit)));
     }
@@ -81,7 +84,9 @@ pub fn read_literal<'a>(
             Ok(Expression::StringLiteral(cx.box_in(lit)))
         },
         | Some(value_node) if value_node.is_number() => {
-            let value: f64 = value_node.as_f64().unwrap_or_default();
+            let value: f64 = value_node
+                .as_f64()
+                .ok_or_else(|| cx.invalid(node, "value", "a finite number"))?;
 
             let base: oxc::syntax::number::NumberBase =
                 number_base(raw.unwrap_or(""));
@@ -95,7 +100,9 @@ pub fn read_literal<'a>(
             Ok(Expression::NumericLiteral(cx.box_in(lit)))
         },
         | Some(value_node) if value_node.is_boolean() => {
-            let b: bool = value_node.as_bool().unwrap_or_default();
+            let b: bool = value_node
+                .as_bool()
+                .ok_or_else(|| cx.invalid(node, "value", "a boolean"))?;
 
             let lit: BooleanLiteral =
                 BooleanLiteral::new(span, b, cx.builder());
@@ -103,6 +110,7 @@ pub fn read_literal<'a>(
             Ok(Expression::BooleanLiteral(cx.box_in(lit)))
         },
         | Some(value_node) if value_node.is_null() && raw == Some("null") => {
+            // Spec-optional: `raw` is the only discriminator for null literals.
             let lit: NullLiteral = NullLiteral::new(span, cx.builder());
 
             Ok(Expression::NullLiteral(cx.box_in(lit)))
