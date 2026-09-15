@@ -4,7 +4,7 @@ mod reader;
 
 use oxc::ast::ast::Program;
 
-use crate::reader::engine::ProgramReader;
+use crate::reader::engine::program::ProgramReader;
 
 pub use crate::_types::options::{JsonToProgramOptions, ProgramToJsonOptions};
 pub use crate::errors::read::ReadError;
@@ -37,7 +37,7 @@ pub mod __internal {
     use crate::errors::read::ReadError;
     use crate::{json_to_program, program_to_json};
 
-    pub use crate::reader::engine::ProgramReader;
+    pub use crate::reader::engine::program::ProgramReader;
 
     pub fn roundtrip<'a>(
         allocator: &'a Allocator,

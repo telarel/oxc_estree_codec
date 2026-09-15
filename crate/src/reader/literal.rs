@@ -1,4 +1,3 @@
-use crate::reader::json::Value;
 use oxc::allocator::GetAllocator;
 use oxc::ast::ast::{
     BigIntLiteral, BooleanLiteral, Expression, NullLiteral, NumericLiteral,
@@ -7,8 +6,91 @@ use oxc::ast::ast::{
 use oxc::span::Span;
 use sonic_rs::JsonValueTrait;
 
-use super::engine::Cx;
 use crate::errors::read::ReadError;
+use crate::reader::engine::context::Cx;
+use crate::reader::json::Value;
+
+/// Check whether a string is in oxc's in-memory lone-surrogate encoding:
+/// every `U+FFFD` must be immediately followed by 4 lowercase hex chars.
+fn is_lone_surrogate_encoded(s: &str) -> bool {
+    if !s.contains('\u{FFFD}') {
+        return false;
+    }
+
+    let bytes: &[u8] = s.as_bytes();
+
+    let mut i: usize = 0;
+
+    while i + 3 <= bytes.len() {
+        if bytes[i] == 0xEF && bytes[i + 1] == 0xBF && bytes[i + 2] == 0xBD {
+            if !matches!(
+                bytes.get(i + 3..i + 7),
+                |Some([
+                    b'0'..=b'9' | b'a'..=b'f',
+                    b'0'..=b'9' | b'a'..=b'f',
+                    b'0'..=b'9' | b'a'..=b'f',
+                    b'0'..=b'9' | b'a'..=b'f',
+                ])
+            ) {
+                return false;
+            }
+
+            i += 7;
+
+            continue;
+        }
+
+        i += 1;
+    }
+
+    true
+}
+
+fn number_base(raw: &str) -> oxc::syntax::number::NumberBase {
+    if raw.starts_with("0x") || raw.starts_with("0X") {
+        oxc::syntax::number::NumberBase::Hex
+    } else if raw.starts_with("0o") || raw.starts_with("0O") {
+        oxc::syntax::number::NumberBase::Octal
+    } else if raw.starts_with("0b") || raw.starts_with("0B") {
+        oxc::syntax::number::NumberBase::Binary
+    } else if raw.contains('.') || raw.contains('e') || raw.contains('E') {
+        oxc::syntax::number::NumberBase::Float
+    } else {
+        oxc::syntax::number::NumberBase::Decimal
+    }
+}
+
+fn bigint_base(raw: &str) -> oxc::syntax::number::BigintBase {
+    if raw.starts_with("0x") || raw.starts_with("0X") {
+        oxc::syntax::number::BigintBase::Hex
+    } else if raw.starts_with("0o") || raw.starts_with("0O") {
+        oxc::syntax::number::BigintBase::Octal
+    } else if raw.starts_with("0b") || raw.starts_with("0B") {
+        oxc::syntax::number::BigintBase::Binary
+    } else {
+        oxc::syntax::number::BigintBase::Decimal
+    }
+}
+
+pub fn regexp_flags(flags: &str) -> RegExpFlags {
+    let mut bits: RegExpFlags = RegExpFlags::empty();
+
+    for flag in flags.chars() {
+        bits |= match flag {
+            | 'g' => RegExpFlags::G,
+            | 'i' => RegExpFlags::I,
+            | 'm' => RegExpFlags::M,
+            | 's' => RegExpFlags::S,
+            | 'u' => RegExpFlags::U,
+            | 'y' => RegExpFlags::Y,
+            | 'd' => RegExpFlags::D,
+            | 'v' => RegExpFlags::V,
+            | _ => RegExpFlags::empty(),
+        };
+    }
+
+    bits
+}
 
 pub fn read_literal<'a>(
     cx: &Cx<'a>,
@@ -73,20 +155,33 @@ pub fn read_literal<'a>(
         | Some(value_node) if value_node.is_str() => {
             let s: &str = value_node.as_str().unwrap_or_default();
 
-            let value: &'a str = cx.builder.allocator().alloc_str(s);
-
             let raw_str: Option<oxc::str::Str<'a>> =
                 raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
 
-            let lit: StringLiteral<'a> =
-                StringLiteral::new(span, value, raw_str, cx.builder());
+            let lit: StringLiteral<'a> = if is_lone_surrogate_encoded(s) {
+                StringLiteral::new_with_lone_surrogates(
+                    span,
+                    oxc::str::Str::from_str_in(s, cx.builder()),
+                    raw_str,
+                    true,
+                    cx.builder(),
+                )
+            } else {
+                StringLiteral::new(
+                    span,
+                    cx.builder.allocator().alloc_str(s),
+                    raw_str,
+                    cx.builder(),
+                )
+            };
 
             Ok(Expression::StringLiteral(cx.box_in(lit)))
         },
         | Some(value_node) if value_node.is_number() => {
             let value: f64 = value_node
-                .as_f64()
-                .ok_or_else(|| cx.invalid(node, "value", "a finite number"))?;
+                .as_raw_number()
+                .and_then(|number| number.as_str().parse::<f64>().ok())
+                .unwrap_or(f64::INFINITY);
 
             let base: oxc::syntax::number::NumberBase =
                 number_base(raw.unwrap_or(""));
@@ -131,59 +226,28 @@ pub fn read_string_literal<'a>(
 
     match value {
         | Some(v) => {
-            let value: &'a str = cx.builder.allocator().alloc_str(v);
-
             let raw_str: Option<oxc::str::Str<'a>> =
                 raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
 
-            Ok(StringLiteral::new(span, value, raw_str, cx.builder()))
+            let lit: StringLiteral<'a> = if is_lone_surrogate_encoded(v) {
+                StringLiteral::new_with_lone_surrogates(
+                    span,
+                    oxc::str::Str::from_str_in(v, cx.builder()),
+                    raw_str,
+                    true,
+                    cx.builder(),
+                )
+            } else {
+                StringLiteral::new(
+                    span,
+                    cx.builder.allocator().alloc_str(v),
+                    raw_str,
+                    cx.builder(),
+                )
+            };
+
+            Ok(lit)
         },
         | None => Err(cx.err(node)),
-    }
-}
-
-pub fn regexp_flags(flags: &str) -> RegExpFlags {
-    let mut bits: RegExpFlags = RegExpFlags::empty();
-
-    for flag in flags.chars() {
-        bits |= match flag {
-            | 'g' => RegExpFlags::G,
-            | 'i' => RegExpFlags::I,
-            | 'm' => RegExpFlags::M,
-            | 's' => RegExpFlags::S,
-            | 'u' => RegExpFlags::U,
-            | 'y' => RegExpFlags::Y,
-            | 'd' => RegExpFlags::D,
-            | 'v' => RegExpFlags::V,
-            | _ => RegExpFlags::empty(),
-        };
-    }
-
-    bits
-}
-
-fn number_base(raw: &str) -> oxc::syntax::number::NumberBase {
-    if raw.starts_with("0x") || raw.starts_with("0X") {
-        oxc::syntax::number::NumberBase::Hex
-    } else if raw.starts_with("0o") || raw.starts_with("0O") {
-        oxc::syntax::number::NumberBase::Octal
-    } else if raw.starts_with("0b") || raw.starts_with("0B") {
-        oxc::syntax::number::NumberBase::Binary
-    } else if raw.contains('.') || raw.contains('e') || raw.contains('E') {
-        oxc::syntax::number::NumberBase::Float
-    } else {
-        oxc::syntax::number::NumberBase::Decimal
-    }
-}
-
-fn bigint_base(raw: &str) -> oxc::syntax::number::BigintBase {
-    if raw.starts_with("0x") || raw.starts_with("0X") {
-        oxc::syntax::number::BigintBase::Hex
-    } else if raw.starts_with("0o") || raw.starts_with("0O") {
-        oxc::syntax::number::BigintBase::Octal
-    } else if raw.starts_with("0b") || raw.starts_with("0B") {
-        oxc::syntax::number::BigintBase::Binary
-    } else {
-        oxc::syntax::number::BigintBase::Decimal
     }
 }

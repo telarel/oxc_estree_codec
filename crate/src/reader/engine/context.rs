@@ -1,12 +1,10 @@
 use std::cell::RefCell;
 
-use crate::reader::json::Value;
 use oxc::allocator::{
     Allocator, Box as ArenaBox, GetAllocator, Vec as ArenaVec,
 };
 use oxc::ast::ast::{
-    BindingPattern, Comment, Directive, Expression, FunctionBody, Hashbang,
-    Program, PropertyKey, SourceType, Statement, StringLiteral, TSType,
+    BindingPattern, Expression, PropertyKey, Statement, StringLiteral, TSType,
     TSTypeAnnotation, TSTypeParameterDeclaration, TSTypeParameterInstantiation,
 };
 use oxc::ast::builder::AstBuilder;
@@ -14,201 +12,14 @@ use oxc::span::Span;
 use sonic_rs::{JsonContainerTrait, JsonValueTrait};
 
 use crate::errors::read::ReadError;
-
-use super::literal;
-use super::statement;
-use super::ts_types;
-
-pub struct ProgramReader<'a> {
-    pub builder: AstBuilder<'a>,
-}
-
-impl<'a> ProgramReader<'a> {
-    pub fn new(allocator: &'a Allocator) -> Self {
-        let builder: AstBuilder<'a> = AstBuilder::new(allocator);
-        Self { builder }
-    }
-
-    pub fn read(
-        &self,
-        json: &Value,
-        source_type: SourceType,
-        source_text: &'a str,
-    ) -> Result<Program<'a>, ReadError> {
-        let cx: Cx<'a> = Cx::new(self);
-
-        let mut body: ArenaVec<'a, Statement<'a>> =
-            ArenaVec::new_in(&self.builder);
-
-        let mut directives: ArenaVec<'a, Directive<'a>> =
-            ArenaVec::new_in(&self.builder);
-
-        cx.child(Seg::Field("body"), |cx| {
-            split_directives_and_statements(
-                cx,
-                json,
-                &mut directives,
-                &mut body,
-            )
-        })?;
-
-        let hashbang: Option<Hashbang<'a>> = match json
-            .get("hashbang")
-            .filter(|h| !h.is_null())
-        {
-            | Some(hashbang_node) => Some(read_hashbang(&cx, hashbang_node)?),
-            | None => None,
-        };
-
-        let comments: ArenaVec<'a, Comment> = ArenaVec::new_in(&self.builder);
-
-        let source_type: SourceType = resolve_source_type(source_type, json);
-
-        let program: Program<'a> = Program::new(
-            cx.span(json),
-            source_type,
-            source_text,
-            comments,
-            hashbang,
-            directives,
-            body,
-            &self.builder,
-        );
-
-        Ok(program)
-    }
-}
-
-fn resolve_source_type(
-    source_type: SourceType,
-    json: &Value,
-) -> SourceType {
-    if !source_type.is_unambiguous() {
-        return source_type;
-    }
-
-    match json.get("sourceType").and_then(Value::as_str) {
-        | Some("script") => source_type.with_script(true),
-        | Some("commonjs") => source_type.with_commonjs(true),
-        | _ => source_type.with_module(true),
-    }
-}
-
-fn directive_if_any<'a>(
-    cx: &Cx<'a>,
-    node: &Value,
-) -> Result<Option<Directive<'a>>, ReadError> {
-    let is_directive: bool = ty_of(node) == "ExpressionStatement"
-        && node.get("directive").is_some_and(Value::is_str);
-
-    if !is_directive {
-        return Ok(None);
-    }
-
-    let directive_str: &str = node
-        .get("directive")
-        .and_then(Value::as_str)
-        .ok_or_else(|| cx.invalid(node, "directive", "a string"))?;
-
-    let directive_atom: oxc::str::Str<'a> =
-        oxc::str::Str::from_str_in(directive_str, cx.builder());
-
-    let expression_node: &Value =
-        node.get("expression").ok_or_else(|| cx.err(node))?;
-
-    let expression: StringLiteral<'a> = cx
-        .child(Seg::Field("expression"), |cx| {
-            literal::read_string_literal(cx, expression_node)
-        })?;
-
-    let directive: Directive<'a> =
-        Directive::new(cx.span(node), expression, directive_atom, cx.builder());
-
-    Ok(Some(directive))
-}
-
-pub fn split_directives_and_statements<'a>(
-    cx: &Cx<'a>,
-    parent_node: &Value,
-    directives: &mut ArenaVec<'a, Directive<'a>>,
-    statements: &mut ArenaVec<'a, Statement<'a>>,
-) -> Result<(), ReadError> {
-    for (index, node) in parent_node
-        .get("body")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .enumerate()
-    {
-        cx.push(Seg::Index(index));
-
-        let step: Result<(), ReadError> = match directive_if_any(cx, node)? {
-            | Some(directive) => {
-                directives.push(directive);
-                Ok(())
-            },
-            | None => {
-                statements.push(statement::read_statement(cx, node)?);
-                Ok(())
-            },
-        };
-
-        cx.pop();
-
-        step?;
-    }
-
-    Ok(())
-}
-
-pub fn read_function_body<'a>(
-    cx: &Cx<'a>,
-    body_node: &Value,
-) -> Result<FunctionBody<'a>, ReadError> {
-    let mut directives: ArenaVec<'a, Directive<'a>> =
-        ArenaVec::new_in(cx.builder());
-
-    let mut statements: ArenaVec<'a, Statement<'a>> =
-        ArenaVec::new_in(cx.builder());
-
-    cx.child(Seg::field("body"), |cx| {
-        split_directives_and_statements(
-            cx,
-            body_node,
-            &mut directives,
-            &mut statements,
-        )
-    })?;
-
-    let function_body: FunctionBody<'a> = FunctionBody::new(
-        cx.span(body_node),
-        directives,
-        statements,
-        cx.builder(),
-    );
-
-    Ok(function_body)
-}
-
-fn read_hashbang<'a>(
-    cx: &Cx<'a>,
-    node: &Value,
-) -> Result<Hashbang<'a>, ReadError> {
-    let value_node: &Value =
-        node.get("value").ok_or_else(|| cx.missing(node, "value"))?;
-
-    let value: &str = value_node
-        .as_str()
-        .ok_or_else(|| cx.invalid(node, "value", "a string"))?;
-
-    let value_atom: oxc::str::Str<'a> =
-        oxc::str::Str::from_str_in(value, cx.builder());
-
-    let hashbang: Hashbang<'a> =
-        Hashbang::new(cx.span(node), value_atom, cx.builder());
-
-    Ok(hashbang)
-}
+use crate::reader::engine::program::ProgramReader;
+use crate::reader::expression::expressions;
+use crate::reader::json::Value;
+use crate::reader::literal;
+use crate::reader::pattern::binding;
+use crate::reader::pattern::targets;
+use crate::reader::statement;
+use crate::reader::ts_types::types;
 
 #[derive(Clone, Copy)]
 pub enum Seg {
@@ -224,6 +35,16 @@ impl Seg {
     pub fn index(value: usize) -> Seg {
         Seg::Index(value)
     }
+}
+
+pub fn ty_of(node: &Value) -> &str {
+    node.get("type").and_then(Value::as_str).unwrap_or("")
+}
+
+fn ty_label(node: &Value) -> String {
+    let ty: &str = ty_of(node);
+
+    if ty.is_empty() { "<missing type>".to_string() } else { ty.to_string() }
 }
 
 pub struct Cx<'a> {
@@ -274,7 +95,7 @@ macro_rules! list_readers {
 }
 
 impl<'a> Cx<'a> {
-    fn new(reader: &ProgramReader<'a>) -> Cx<'a> {
+    pub fn new(reader: &ProgramReader<'a>) -> Cx<'a> {
         let allocator: &'a Allocator = reader.builder.allocator();
 
         let builder: AstBuilder<'a> = AstBuilder::new(allocator);
@@ -559,29 +380,30 @@ impl<'a> Cx<'a> {
     }
 
     req_readers! {
-        expr => super::expression::read_expression : Expression<'a>;
+        expr => expressions::read_expression :
+            Expression<'a>;
         stmt => statement::read_statement : Statement<'a>;
-        pattern => super::pattern::read_binding_pattern :
+        pattern => binding::read_binding_pattern :
             BindingPattern<'a>;
-        ts => ts_types::read_ts_type : TSType<'a>;
+        ts => types::read_ts_type : TSType<'a>;
         string_literal => literal::read_string_literal :
             StringLiteral<'a>;
-        property_key => super::pattern::read_property_key :
+        property_key => targets::read_property_key :
             PropertyKey<'a>;
     }
 
     opt_readers! {
-        opt_expr => super::expression::read_expression :
+        opt_expr => expressions::read_expression :
             Expression<'a>;
         opt_stmt => statement::read_statement : Statement<'a>;
-        opt_ts => ts_types::read_ts_type : TSType<'a>;
+        opt_ts => types::read_ts_type : TSType<'a>;
     }
 
     list_readers! {
-        exprs => super::expression::read_expression :
+        exprs => expressions::read_expression :
             Expression<'a>;
         stmts => statement::read_statement : Statement<'a>;
-        ts_types => ts_types::read_ts_type : TSType<'a>;
+        ts_types => types::read_ts_type : TSType<'a>;
     }
 
     pub fn opt_type_arguments(
@@ -592,7 +414,7 @@ impl<'a> Cx<'a> {
         self.opt(
             node,
             "typeArguments",
-            ts_types::read_ts_type_parameter_instantiation,
+            types::read_ts_type_parameter_instantiation,
         )
         .map(|instantiation| instantiation.map(|value| self.box_in(value)))
     }
@@ -605,7 +427,7 @@ impl<'a> Cx<'a> {
         self.opt(
             node,
             "typeParameters",
-            ts_types::read_ts_type_parameter_declaration,
+            types::read_ts_type_parameter_declaration,
         )
     }
 
@@ -614,19 +436,9 @@ impl<'a> Cx<'a> {
         node: &Value,
         field: &'static str,
     ) -> Result<Option<ArenaBox<'a, TSTypeAnnotation<'a>>>, ReadError> {
-        self.opt(node, field, ts_types::read_ts_type_annotation)
+        self.opt(node, field, types::read_ts_type_annotation)
             .map(|annotation| annotation.flatten())
     }
-}
-
-pub fn ty_of(node: &Value) -> &str {
-    node.get("type").and_then(Value::as_str).unwrap_or("")
-}
-
-fn ty_label(node: &Value) -> String {
-    let ty: &str = ty_of(node);
-
-    if ty.is_empty() { "<missing type>".to_string() } else { ty.to_string() }
 }
 
 macro_rules! nodes {
