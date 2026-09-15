@@ -139,7 +139,12 @@ fn read_jsx_opening_element<'a>(
     let name: JSXElementName<'a> =
         cx.req(node, "name", read_jsx_element_name)?;
 
-    let type_arguments = cx.opt_type_arguments(node)?;
+    let type_arguments: Option<
+        oxc::allocator::Box<
+            'a,
+            oxc::ast::ast::TSTypeParameterInstantiation<'a>,
+        >,
+    > = cx.opt_type_arguments(node)?;
 
     let attributes: oxc::allocator::Vec<'a, JSXAttributeItem<'a>> =
         cx.list(node, "attributes", read_jsx_attribute_item)?;

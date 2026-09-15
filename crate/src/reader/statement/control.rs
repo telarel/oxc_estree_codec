@@ -29,7 +29,9 @@ fn variable_declarator<'a>(
     ) = cx.child(Seg::field("id"), |cx| {
         let id: BindingPattern<'a> = read_binding_pattern(cx, id_node)?;
 
-        let type_annotation = cx.annotation(id_node, "typeAnnotation")?;
+        let type_annotation: Option<
+            oxc::allocator::Box<'a, TSTypeAnnotation<'a>>,
+        > = cx.annotation(id_node, "typeAnnotation")?;
 
         Ok((id, type_annotation))
     })?;

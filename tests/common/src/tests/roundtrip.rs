@@ -1,8 +1,7 @@
 use oxc::allocator::Allocator;
 use oxc::span::SourceType;
-use sonic_rs::Value;
-
 use oxc_estree_codec::__internal::ProgramReader;
+use sonic_rs::Value;
 
 use test_helpers::json::parse_value;
 

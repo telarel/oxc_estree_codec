@@ -173,7 +173,8 @@ fn formal_parameter<'a>(
     let pattern: BindingPattern<'a> =
         pattern::binding::read_binding_pattern(cx, item)?;
 
-    let type_annotation = cx.annotation(item, "typeAnnotation")?;
+    let type_annotation: Option<oxc::allocator::Box<'a, TSTypeAnnotation<'a>>> =
+        cx.annotation(item, "typeAnnotation")?;
 
     let param: FormalParameter<'a> = FormalParameter::new(
         param_span,
