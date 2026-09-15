@@ -17,7 +17,7 @@ flowchart LR
 ```rust
 use oxc_estree_codec::{ProgramToJsonOptions, program_to_json};
 
-let json: String = program_to_json(&program, ProgramToJsonOptions::default());
+let json: String = program_to_json(&program, ProgramToJsonOptions::new());
 ```
 
 ```ts

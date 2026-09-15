@@ -1,42 +1,31 @@
 use std::fmt::{self, Display};
 
+/// Error returned when reading an ESTree JSON payload into a typed AST.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ReadError {
-    JsonInvalid {
-        message: String,
-    },
-    NodeUnsupported {
-        ty: String,
-        path: String,
-    },
-    FieldMissing {
-        field: &'static str,
-        ty: String,
-        path: String,
-    },
+    /// The JSON payload is not valid.
+    JsonInvalid { message: String },
+    /// An ESTree node type is not supported.
+    NodeUnsupported { ty: String, path: String },
+    /// A required field is missing on a node.
+    FieldMissing { field: &'static str, ty: String, path: String },
+    /// A field has an unexpected value or shape.
     FieldInvalid {
         field: &'static str,
         expected: &'static str,
         ty: String,
         path: String,
     },
-    OperatorUnsupported {
-        kind: &'static str,
-        operator: String,
-        path: String,
-    },
-    ValueUnsupported {
-        kind: &'static str,
-        value: String,
-        path: String,
-    },
-    ImportPhaseUnsupported {
-        phase: String,
-        path: String,
-    },
+    /// An operator is not supported.
+    OperatorUnsupported { kind: &'static str, operator: String, path: String },
+    /// A literal or flag value is not supported.
+    ValueUnsupported { kind: &'static str, value: String, path: String },
+    /// An import phase is not supported.
+    ImportPhaseUnsupported { phase: String, path: String },
 }
 
 impl ReadError {
+    /// Create a [`ReadError::JsonInvalid`] from a message.
     pub fn from_message(message: impl Into<String>) -> Self {
         Self::JsonInvalid { message: message.into() }
     }
