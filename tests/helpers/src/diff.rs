@@ -1,8 +1,10 @@
 use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 
-use oxc_estree_codec::__internal::roundtrip;
-use oxc_estree_codec::{ProgramToJsonOptions, program_to_json};
+use oxc_estree_codec::{
+    JsonToProgramOptions, ProgramToJsonOptions, json_to_program,
+    program_to_json,
+};
 
 pub enum RoundtripError {
     ParseFailed,
@@ -42,10 +44,15 @@ pub fn roundtrip_bytes_with(
         ProgramToJsonOptions::default(),
     );
 
-    let program: oxc::ast::ast::Program<'_> =
-        roundtrip(&allocator, &parser_return.program).map_err(|error| {
-            RoundtripError::Roundtrip(format!("{file}: {error}"))
-        })?;
+    let program: oxc::ast::ast::Program<'_> = json_to_program(
+        &before,
+        JsonToProgramOptions {
+            allocator: &allocator,
+            source_type: parser_return.program.source_type,
+            source_text: parser_return.program.source_text,
+        },
+    )
+    .map_err(|error| RoundtripError::Roundtrip(format!("{file}: {error}")))?;
 
     let after: String =
         program_to_json(&program, ProgramToJsonOptions::default());
