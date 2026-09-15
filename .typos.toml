@@ -6,4 +6,7 @@ extend-exclude = [
     ".DS_Store",
     "node_modules/",
     "target/",
+    "test262/",
+    "babel/",
+    "eslint_typescript/",
 ]

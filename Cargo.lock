@@ -357,6 +357,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "get_dir"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7be53a543a609b266f8ed4237af223fa96bdaa54d69fd6845c71a421a4a4748"
+
+[[package]]
 name = "getrandom"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1371,12 +1377,59 @@ dependencies = [
 ]
 
 [[package]]
-name = "test"
-version = "0.0.0"
+name = "test262"
+version = "0.1.0"
+dependencies = [
+ "oxc",
+ "oxc_estree_codec",
+ "test_helpers",
+]
+
+[[package]]
+name = "test_babel"
+version = "0.1.0"
+dependencies = [
+ "oxc",
+ "oxc_estree_codec",
+ "test_helpers",
+]
+
+[[package]]
+name = "test_common"
+version = "0.1.0"
 dependencies = [
  "oxc",
  "oxc_estree_codec",
  "sonic-rs",
+ "test_helpers",
+]
+
+[[package]]
+name = "test_eslint_typescript"
+version = "0.1.0"
+dependencies = [
+ "oxc",
+ "oxc_estree_codec",
+ "test_helpers",
+]
+
+[[package]]
+name = "test_fixtures"
+version = "0.1.0"
+dependencies = [
+ "oxc",
+ "oxc_estree_codec",
+ "test_helpers",
+]
+
+[[package]]
+name = "test_helpers"
+version = "0.1.0"
+dependencies = [
+ "oxc",
+ "oxc_estree_codec",
+ "sonic-rs",
+ "workspace_root",
 ]
 
 [[package]]
@@ -1623,6 +1676,15 @@ name = "wit-bindgen"
 version = "0.57.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ebf944e87a7c253233ad6766e082e3cd714b5d03812acc24c318f549614536e"
+
+[[package]]
+name = "workspace_root"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70d804157714956faa87af2ccf3ea2917a7e588c84c6e0a473311c1fca161818"
+dependencies = [
+ "get_dir",
+]
 
 [[package]]
 name = "writeable"

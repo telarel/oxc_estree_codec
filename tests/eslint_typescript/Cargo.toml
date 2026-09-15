@@ -1,0 +1,13 @@
+#:schema https://www.schemastore.org/cargo.json
+
+[package]
+name = "test_eslint_typescript"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.96.0"
+publish = false
+
+[dependencies]
+oxc = { workspace = true, features = ["codegen", "semantic"] }
+oxc_estree_codec = { workspace = true }
+test_helpers = { workspace = true }

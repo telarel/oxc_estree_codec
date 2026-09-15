@@ -6,5 +6,9 @@ export default defineConfig({
         ...IGNORE_PATTERNS_DEFAULT,
         // Rust
         "target/**",
+        // Git submodules
+        "test262/**",
+        "babel/**",
+        "eslint_typescript/**",
     ],
 });

@@ -1,36 +1,19 @@
-use oxc::allocator::Allocator;
-use oxc::span::SourceType;
-
-use oxc_estree_codec::__internal::roundtrip;
-use oxc_estree_codec::{ProgramToJsonOptions, program_to_json};
+use test_helpers::diff::{RoundtripError, roundtrip_bytes};
 
 fn roundtrip_diff(
     file: &str,
     code: &str,
 ) {
-    let allocator: Allocator = Allocator::default();
-
-    let parser_return: oxc::parser::ParserReturn<'_> =
-        oxc::parser::Parser::new(
-            &allocator,
-            code,
-            SourceType::from_path(file).unwrap_or_default(),
-        )
-        .parse();
-
-    assert!(parser_return.diagnostics.is_empty(), "fixture must parse: {file}");
-
-    let before: String = program_to_json(
-        &parser_return.program,
-        ProgramToJsonOptions::default(),
+    roundtrip_bytes(file, code).map(|_| ()).unwrap_or_else(
+        |error| match error {
+            | RoundtripError::ParseFailed => {
+                panic!("fixture does not parse: {file}");
+            },
+            | RoundtripError::Roundtrip(message) => {
+                panic!("{message}");
+            },
+        },
     );
-    let program: oxc::ast::ast::Program<'_> =
-        roundtrip(&allocator, &parser_return.program)
-            .expect("roundtrip must read serializer output back");
-    let after: String =
-        program_to_json(&program, ProgramToJsonOptions::default());
-
-    assert_eq!(before, after, "roundtrip must be byte-stable: {file}");
 }
 
 #[test]
@@ -45,7 +28,7 @@ fn test_diff_plain_js_module() {
 fn test_diff_class_heavy() {
     roundtrip_diff(
         "c.ts",
-        "abstract class A implements I { #x = 1; static s: number = 2; declare d?: string; constructor(public readonly a: Foo, private b = 1) { super(); } get g(): number { return this.#x; } static { init(); } }\nclass B extends A<string> { @dec m<T>(x: T): asserts x is T {} }\nconst C = class Named<T extends object = {}> implements J<T> {};\n",
+        "abstract class A extends Base implements I { #x = 1; static s: number = 2; declare d?: string; constructor(public readonly a: Foo, private b = 1) { super(); } get g(): number { return this.#x; } static { init(); } }\nclass B extends A<string> { @dec m<T>(x: T): asserts x is T {} }\nconst C = class Named<T extends object = {}> implements J<T> {};\n",
     );
 }
 

@@ -4,9 +4,7 @@ use sonic_rs::Value;
 
 use oxc_estree_codec::__internal::ProgramReader;
 
-pub fn parse_value(json: &str) -> Value {
-    sonic_rs::from_str::<Value>(json).unwrap()
-}
+use test_helpers::json::parse_value;
 
 fn roundtrip(
     file: &str,

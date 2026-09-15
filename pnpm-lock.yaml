@@ -11,6 +11,9 @@ importers:
       '@apst/oxfmt':
         specifier: ~0.2.0
         version: 0.2.0(oxfmt@0.67.0)
+      '@apst/tsconfig':
+        specifier: ~0.3.0
+        version: 0.3.0
       oxfmt:
         specifier: ~0.67.0
         version: 0.67.0
@@ -23,6 +26,14 @@ packages:
       oxfmt: ^0.50.0
     peerDependenciesMeta:
       oxfmt:
+        optional: true
+
+  '@apst/tsconfig@0.3.0':
+    resolution: {integrity: sha512-1fvjlQLOexuVqZaQj7K+n/3GxEAk5WcbuSuUsaxpfxhEuWpTIGop04nGX7XENScZhkxm4+vFIFy1LsYLNpOUjQ==}
+    peerDependencies:
+      typescript: ^5.0.0 || ^6.0.0
+    peerDependenciesMeta:
+      typescript:
         optional: true
 
   '@oxfmt/binding-android-arm-eabi@0.67.0':
@@ -174,6 +185,8 @@ snapshots:
       es-toolkit: 1.52.0
     optionalDependencies:
       oxfmt: 0.67.0
+
+  '@apst/tsconfig@0.3.0': {}
 
   '@oxfmt/binding-android-arm-eabi@0.67.0':
     optional: true

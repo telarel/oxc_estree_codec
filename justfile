@@ -37,11 +37,30 @@ typos:
 lint:
     cargo clippy --workspace --all-targets
 
-# Rust test
-test:
-    cargo test -- --nocapture
+# Run common test
+test-common:
+    cargo test -p test_common -- --nocapture
 
-# Rust bench
+# Run fixtures test
+test-fixtures:
+    cargo test -p test_fixtures -- --nocapture
+
+# Run test262
+test-test262:
+    cargo test -p test262 -- --nocapture
+
+# Run babel test
+test-babel:
+    cargo test -p test_babel -- --nocapture
+
+# Run Eslint TypeScript test
+test-eslint-typescript:
+    cargo test -p test_eslint_typescript -- --nocapture
+
+# Run test
+test: test-common test-fixtures test-test262 test-babel test-eslint-typescript
+
+# Run bench
 bench:
     cargo bench -p bench -- --warm-up-time 1 --measurement-time 3
 

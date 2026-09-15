@@ -2,7 +2,7 @@ use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 use sonic_rs::Value;
 
-use super::roundtrip::parse_value;
+use test_helpers::json::parse_value;
 
 #[test]
 fn test_read_rejects_unknown_import_phase() {
