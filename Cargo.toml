@@ -11,6 +11,6 @@ oxc_estree_codec = { version = "0.1.0", path = "crate" }
 test_helpers = { version = "0.1.0", path = "tests/helpers" }
 
 # Crates
-oxc = { version = "~0.149.0" }
+oxc = { version = "~0.150.0" }
 sonic-rs = { version = "~0.5.0" }
 workspace_root = { version = "~0.2.0" }
