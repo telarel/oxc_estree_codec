@@ -4,6 +4,6 @@
     "devDependencies": {
         "@apst/oxfmt": "~0.2.0",
         "@apst/tsconfig": "~0.3.0",
-        "oxfmt": "~0.67.0"
+        "oxfmt": "~0.68.0"
     }
 }
