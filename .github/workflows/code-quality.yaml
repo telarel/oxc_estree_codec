@@ -22,6 +22,9 @@ jobs:
                   toolchain: "1.96.0"
                   components: clippy
 
+            - name: Setup Node
+              uses: alpheusci/setup-node@v1
+
             - name: Install ls-lint
               run: brew install ls-lint
 
