@@ -5,6 +5,7 @@ name = "bench"
 edition = "2024"
 rust-version = "1.96.0"
 publish = false
+autobenches = false
 
 [dependencies]
 oxc = { workspace = true, features = ["codegen", "serialize"] }

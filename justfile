@@ -2,6 +2,7 @@ set shell := ["bash", "-cu"]
 set windows-shell := ["pwsh", "-Command"]
 
 oxfmt := "pnpm exec oxfmt"
+oxlint := "pnpm exec oxlint"
 
 # Default action
 _:
@@ -33,9 +34,16 @@ lslint: ls-lint
 typos:
     typos
 
-# Lint code
-lint:
+# Lint Rust code
+lint-rs:
     cargo clippy --workspace --all-targets
+
+# Lint JavaScript code with type check
+lint-js:
+    {{oxlint}} --fix --fix-suggestions --fix-dangerously
+
+# Lint code
+lint: lint-rs lint-js
 
 # Run common test
 test-common:

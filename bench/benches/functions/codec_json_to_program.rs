@@ -1,0 +1,45 @@
+use std::hint::black_box;
+
+use criterion::{BenchmarkGroup, BenchmarkId, Criterion, Throughput};
+use oxc::allocator::Allocator;
+
+use oxc_estree_codec::JsonToProgramOptions;
+
+use crate::functions::fixtures::Fixture;
+
+pub fn bench(
+    criterion: &mut Criterion,
+    fixtures: &[Fixture],
+) {
+    let mut group: BenchmarkGroup<'_, _> =
+        criterion.benchmark_group("js_to_rust");
+
+    for fixture in fixtures {
+        group.throughput(Throughput::Bytes(fixture.json.len() as u64));
+
+        group.bench_with_input(
+            BenchmarkId::new("codec_json_to_program", fixture.name),
+            fixture,
+            |b, fixture| {
+                b.iter(|| {
+                    let allocator: Allocator = Allocator::default();
+
+                    let program: oxc::ast::ast::Program<'_> =
+                        oxc_estree_codec::json_to_program(
+                            black_box(&fixture.json),
+                            JsonToProgramOptions {
+                                allocator: &allocator,
+                                source_type: fixture.source_type,
+                                source_text: fixture.source,
+                            },
+                        )
+                        .unwrap();
+
+                    black_box(std::ptr::from_ref(&program));
+                })
+            },
+        );
+    }
+
+    group.finish();
+}
