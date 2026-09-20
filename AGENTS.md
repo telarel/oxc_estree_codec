@@ -19,6 +19,14 @@ This repository is a Rust workspace.
 | `tests/eslint_typescript` | Tests for the eslint typescript corpus  |
 | `bench`                   | Benchmark for measuring the performance |
 
+## Records
+
+`records/` holds the costly investigations that took significant time:
+
+- read the matching record in `records/README.md` before proposing work in a listed area
+- do not re-propose executed-and-rejected approaches without new evidence
+- distill a concluded investigation into a record; small changes do not need one
+
 ## Code Standards
 
 ### Languages
