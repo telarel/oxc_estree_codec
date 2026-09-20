@@ -308,3 +308,176 @@ fn test_read_rejects_meta_property_without_names() {
         },
     }
 }
+
+#[test]
+fn test_read_number_edge_cases() {
+    let cases: &[(&str, &str)] = &[
+        ("const a = -0;", "const a = -0;\n"),
+        ("const a = 1e999;", "const a = Infinity;\n"),
+        ("const a = -1e999;", "const a = -Infinity;\n"),
+        (
+            "const a = 123456789012345678901234567890;",
+            "const a = 12345678901234568e13;\n",
+        ),
+        ("const a = 0.30000000000000004;", "const a = .30000000000000004;\n"),
+        ("const a = 1e-7;", "const a = 1e-7;\n"),
+        ("const a = 5e-324;", "const a = 5e-324;\n"),
+        ("const a = 9007199254740993n;", "const a = 9007199254740993n;\n"),
+    ];
+
+    for (code, expected) in cases {
+        let allocator: Allocator = Allocator::default();
+
+        let parser_return: oxc::parser::ParserReturn<'_> =
+            oxc::parser::Parser::new(
+                &allocator,
+                code,
+                SourceType::from_path("a.js").unwrap(),
+            )
+            .parse();
+
+        assert!(
+            parser_return.diagnostics.is_empty(),
+            "fixture must parse: {code}"
+        );
+
+        let json: String = oxc_estree_codec::program_to_json(
+            &parser_return.program,
+            oxc_estree_codec::ProgramToJsonOptions::new(),
+        );
+
+        let program: oxc::ast::ast::Program<'_> =
+            oxc_estree_codec::json_to_program(
+                &json,
+                oxc_estree_codec::JsonToProgramOptions {
+                    allocator: &allocator,
+                    source_type: parser_return.program.source_type,
+                    source_text: code,
+                },
+            )
+            .unwrap_or_else(|error| panic!("must read: {code}: {error}"));
+
+        let out: String = oxc::codegen::Codegen::new().build(&program).code;
+
+        assert_eq!(out, *expected, "number semantics must round-trip: {code}");
+    }
+}
+
+#[test]
+fn test_read_infinity_string_not_corrupted() {
+    let allocator: Allocator = Allocator::default();
+
+    // A source string literal containing the `1e+400` sentinel text
+    // (oxc's serializer emits this for ±Infinity NUMBERS) must survive a
+    // read round-trip byte-identical. Any future JSON parser swap that
+    // pre-scans the input for `1e+400` must not corrupt string positions.
+    let code: &str = "const s = \"1e+400\";";
+
+    let parser_return: oxc::parser::ParserReturn<'_> =
+        oxc::parser::Parser::new(
+            &allocator,
+            code,
+            SourceType::from_path("a.js").unwrap(),
+        )
+        .parse();
+
+    assert!(parser_return.diagnostics.is_empty());
+
+    let json: String = oxc_estree_codec::program_to_json(
+        &parser_return.program,
+        oxc_estree_codec::ProgramToJsonOptions::new(),
+    );
+
+    let program: oxc::ast::ast::Program<'_> =
+        oxc_estree_codec::json_to_program(
+            &json,
+            oxc_estree_codec::JsonToProgramOptions {
+                allocator: &allocator,
+                source_type: parser_return.program.source_type,
+                source_text: code,
+            },
+        )
+        .unwrap_or_else(|error| panic!("sentinels must read: {error}"));
+
+    let out: String = oxc::codegen::Codegen::new().build(&program).code;
+
+    assert!(out.contains("1e+400"), "string sentinel must survive: {out}");
+}
+
+#[test]
+fn test_read_infinity_number_positions() {
+    let allocator: Allocator = Allocator::default();
+
+    // ±Infinity numeric literals serialize as `1e+400` / `-1e+400` on the
+    // wire; the reader must reconstruct exact ±Infinity (not f64::MAX).
+    let code: &str = "const a = 1e999;\nconst b = -1e999;\n";
+
+    let parser_return: oxc::parser::ParserReturn<'_> =
+        oxc::parser::Parser::new(
+            &allocator,
+            code,
+            SourceType::from_path("a.js").unwrap(),
+        )
+        .parse();
+
+    assert!(parser_return.diagnostics.is_empty());
+
+    let json: String = oxc_estree_codec::program_to_json(
+        &parser_return.program,
+        oxc_estree_codec::ProgramToJsonOptions::new(),
+    );
+
+    assert!(json.contains("1e+400"), "serializer must emit sentinels");
+
+    let program: oxc::ast::ast::Program<'_> =
+        oxc_estree_codec::json_to_program(
+            &json,
+            oxc_estree_codec::JsonToProgramOptions {
+                allocator: &allocator,
+                source_type: parser_return.program.source_type,
+                source_text: code,
+            },
+        )
+        .unwrap_or_else(|error| panic!("sentinels must read: {error}"));
+
+    let out: String = oxc::codegen::Codegen::new().build(&program).code;
+
+    // oxc codegen prints infinite numeric literals by VALUE (`Infinity` /
+    // `-Infinity`), never by `raw` (`1e999`); expectations captured from
+    // oxc's own parse+codegen ground truth.
+    assert_eq!(out, "const a = Infinity;\nconst b = -Infinity;\n");
+}
+
+#[test]
+fn test_read_infinity_nested_and_negative() {
+    let allocator: Allocator = Allocator::default();
+
+    let code: &str = "const a = -1e999;";
+
+    let parser_return: oxc::parser::ParserReturn<'_> =
+        oxc::parser::Parser::new(
+            &allocator,
+            code,
+            SourceType::from_path("a.js").unwrap(),
+        )
+        .parse();
+
+    assert!(parser_return.diagnostics.is_empty());
+
+    let json: String = parser_return.program.to_estree_json(true, false);
+
+    let program: oxc::ast::ast::Program<'_> =
+        oxc_estree_codec::json_to_program(
+            &json,
+            oxc_estree_codec::JsonToProgramOptions {
+                allocator: &allocator,
+                source_type: parser_return.program.source_type,
+                source_text: code,
+            },
+        )
+        .unwrap();
+
+    let out: String = oxc::codegen::Codegen::new().build(&program).code;
+
+    assert_eq!(out, "const a = -Infinity;\n");
+}
