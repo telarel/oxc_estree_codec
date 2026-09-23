@@ -6,7 +6,7 @@
         "@apst/oxlint": "~0.5.0",
         "@apst/tsconfig": "~0.3.0",
         "@types/react": "^19.3.0",
-        "oxfmt": "~0.68.0",
+        "oxfmt": "~0.70.0",
         "oxlint": "^1.83.0",
         "oxlint-tsgolint": "^7.0.2002"
     }
