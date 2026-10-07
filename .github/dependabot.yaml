@@ -41,8 +41,4 @@ updates:
           prefix: "chore"
       ignore:
           - dependency-name: "oxc"
-            update-types:
-                - "version-update:semver-patch"
           - dependency-name: "sonic-rs"
-            update-types:
-                - "version-update:semver-patch"
