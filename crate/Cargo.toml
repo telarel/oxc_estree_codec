@@ -4,8 +4,8 @@
 name = "oxc_estree_codec"
 version = "0.1.1"
 authors = ["Alpheus <contact@alphe.us>"]
-edition = "2024"
-rust-version = "1.97.0"
+edition.workspace = true
+rust-version.workspace = true
 description = "A two-way codec between ESTree and oxc's typed AST"
 readme = "README.md"
 homepage = "https://github.com/telarel/oxc_estree_codec"

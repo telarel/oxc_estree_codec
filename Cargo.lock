@@ -1378,7 +1378,7 @@ dependencies = [
 
 [[package]]
 name = "test262"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "oxc",
  "oxc_estree_codec",
@@ -1387,7 +1387,7 @@ dependencies = [
 
 [[package]]
 name = "test_babel"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "oxc",
  "oxc_estree_codec",
@@ -1396,7 +1396,7 @@ dependencies = [
 
 [[package]]
 name = "test_common"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "oxc",
  "oxc_estree_codec",
@@ -1406,7 +1406,7 @@ dependencies = [
 
 [[package]]
 name = "test_eslint_typescript"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "oxc",
  "oxc_estree_codec",
@@ -1415,7 +1415,7 @@ dependencies = [
 
 [[package]]
 name = "test_fixtures"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "oxc",
  "oxc_estree_codec",
@@ -1424,7 +1424,7 @@ dependencies = [
 
 [[package]]
 name = "test_helpers"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "oxc",
  "oxc_estree_codec",
