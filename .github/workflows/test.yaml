@@ -24,8 +24,8 @@ jobs:
                     - name: Windows
                       code: windows-latest
                 rust:
-                    - name: "1.96.0"
-                      code: "1.96.0"
+                    - name: "1.97.0"
+                      code: "1.97.0"
                     - name: Stable
                       code: stable
         steps:

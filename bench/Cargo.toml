@@ -3,7 +3,7 @@
 [package]
 name = "bench"
 edition = "2024"
-rust-version = "1.96.0"
+rust-version = "1.97.0"
 publish = false
 autobenches = false
 

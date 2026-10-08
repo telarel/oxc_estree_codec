@@ -225,6 +225,8 @@ mod tests {
         "typescript/class/members-with-reserved-names",
         "typescript/class/method-no-body",
         "typescript/class/method-with-newline-without-body",
+        // oxc parser (TS1243): "'async' modifier cannot be used with 'abstract' modifier" (babel accepts)
+        "typescript/class/modifiers-methods-async",
         "typescript/class/modifiers-override",
         "typescript/class/parameter-properties",
         "typescript/class/properties",
