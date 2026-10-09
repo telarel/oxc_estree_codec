@@ -2,7 +2,7 @@
 
 [package]
 name = "oxc_estree_codec"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Alpheus <contact@alphe.us>"]
 edition.workspace = true
 rust-version.workspace = true

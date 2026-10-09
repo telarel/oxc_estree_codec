@@ -11,7 +11,7 @@ rust-version = "1.97.0"
 [workspace.dependencies]
 
 # Workspace
-oxc_estree_codec = { version = "0.1.1", path = "crate" }
+oxc_estree_codec = { version = "0.2.0", path = "crate" }
 test_helpers = { version = "0.0.0", path = "tests/helpers" }
 
 # Crates
