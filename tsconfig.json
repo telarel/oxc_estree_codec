@@ -1,4 +1,4 @@
 {
     "extends": "@apst/tsconfig/lib",
-    "include": []
+    "include": ["./scripts/**/*"]
 }

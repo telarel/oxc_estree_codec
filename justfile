@@ -75,6 +75,10 @@ bench:
 # Check code
 check: fmt ls-lint typos lint test
 
+# Set crate version
+ver VERSION:
+    node ./scripts/set-crate-version.ts {{VERSION}}
+
 # Publish the crate as dry-run
 publish-try:
     cargo publish -p oxc_estree_codec --dry-run

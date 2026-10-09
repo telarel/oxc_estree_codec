@@ -5,9 +5,13 @@
         "@apst/oxfmt": "~0.2.0",
         "@apst/oxlint": "~0.5.0",
         "@apst/tsconfig": "~0.3.0",
+        "@decimalturn/toml-patch": "^3.3.0",
+        "@types/node": "^26.1.2",
         "@types/react": "^19.3.0",
+        "consola": "^3.4.2",
         "oxfmt": "~0.72.0",
         "oxlint": "^1.87.0",
-        "oxlint-tsgolint": "^7.0.2003"
+        "oxlint-tsgolint": "^7.0.2003",
+        "typescript": "^7.0.2"
     }
 }
