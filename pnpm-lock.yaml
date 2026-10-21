@@ -18,8 +18,8 @@ importers:
         specifier: ~0.3.0
         version: 0.3.0(typescript@7.0.2)
       '@decimalturn/toml-patch':
-        specifier: ^3.3.0
-        version: 3.3.0
+        specifier: ^3.3.1
+        version: 3.3.1
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
@@ -68,8 +68,8 @@ packages:
       typescript:
         optional: true
 
-  '@decimalturn/toml-patch@3.3.0':
-    resolution: {integrity: sha512-xyamcHl5Jlm+KfI9Vn7k6Je+kqQ8bAmJtoWleQ7yNqUL9fwwc66+Q3bRO326U/ZLYjrVzB3irvJz8nuG+JwFdA==}
+  '@decimalturn/toml-patch@3.3.1':
+    resolution: {integrity: sha512-bevRGAUJonKWPBEY0tmn6HxEsPS1hJquwoIRNg/WTJnN+/0J6nfomSkn4FBtGlw1dUEt8tkS97oR0wwy3bo2HQ==}
     engines: {node: '>=16'}
 
   '@oxfmt/binding-android-arm-eabi@0.73.0':
@@ -545,7 +545,7 @@ snapshots:
     optionalDependencies:
       typescript: 7.0.2
 
-  '@decimalturn/toml-patch@3.3.0': {}
+  '@decimalturn/toml-patch@3.3.1': {}
 
   '@oxfmt/binding-android-arm-eabi@0.73.0':
     optional: true
