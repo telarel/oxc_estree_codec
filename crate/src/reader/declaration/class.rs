@@ -7,7 +7,7 @@ use oxc::ast::ast::{
     TSTypeAnnotation, TSTypeName,
 };
 use oxc::span::Span;
-use sonic_rs::{JsonContainerTrait, JsonValueTrait};
+use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::declaration::function::{
@@ -15,7 +15,6 @@ use crate::reader::declaration::function::{
 };
 use crate::reader::engine::context::{Cx, Seg, ty_of};
 use crate::reader::expression::expressions;
-use crate::reader::json::Value;
 
 fn read_class_implements<'a>(
     cx: &Cx<'a>,

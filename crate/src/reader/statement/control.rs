@@ -5,12 +5,11 @@ use oxc::ast::ast::{
     VariableDeclarationKind, VariableDeclarator,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, Seg, ty_of};
 use crate::reader::expression::expressions;
-use crate::reader::json::Value;
 use crate::reader::pattern::binding::read_binding_pattern;
 use crate::reader::pattern::targets::read_assignment_target;
 use crate::reader::statement::block_statement;

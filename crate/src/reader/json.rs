@@ -1,5 +1,9 @@
 use std::borrow::Cow;
 
+use oxc::allocator::GetAllocator;
+use oxc::str::{JSStr, JSStrBuilder};
+use sonic_rs::Value;
+
 fn hex_code_point(bytes: &[u8]) -> Option<u16> {
     if bytes.len() != 4 {
         return None;
@@ -21,9 +25,45 @@ fn hex_code_point(bytes: &[u8]) -> Option<u16> {
     u16::try_from(value).ok()
 }
 
-/// Rewrite JSON `\uXXXX` escapes for unpaired surrogates into oxc's in-memory
-/// lone-surrogate encoding (`U+FFFD` followed by 4 lowercase hex chars), which
-/// oxc's ESTree serializer maps back to the original `\uXXXX` escape.
+fn decode_lone_surrogate_encoding<'a>(
+    value: &str,
+    allocator: &impl GetAllocator<'a>,
+) -> Option<JSStr<'a>> {
+    if !value.contains('\u{FFFD}') {
+        return None;
+    }
+
+    let mut builder: JSStrBuilder<'a> =
+        JSStrBuilder::with_capacity_in(value.len(), allocator);
+
+    let mut rest: &str = value;
+
+    while let Some(index) = rest.find('\u{FFFD}') {
+        builder.push_str(&rest[..index]);
+
+        let after_marker: &str = &rest[index + '\u{FFFD}'.len_utf8()..];
+
+        let hex: &str = after_marker.get(..4)?;
+
+        if !hex.bytes().all(|byte| matches!(byte, b'0'..=b'9' | b'a'..=b'f')) {
+            return None;
+        }
+
+        let code_unit: u16 = hex_code_point(hex.as_bytes())?;
+
+        builder.push_code_unit(code_unit);
+
+        rest = &after_marker[4..];
+    }
+
+    builder.push_str(rest);
+
+    Some(builder.into_js_str())
+}
+
+/// Rewrite JSON `\uXXXX` escapes for unpaired surrogates into the reader's
+/// intermediate lone-surrogate encoding (`U+FFFD` followed by 4 lowercase hex
+/// chars), which [`read_js_str`] decodes back into a [`JSStr`].
 fn encode_lone_surrogate_escapes(input: &str) -> Cow<'_, str> {
     let bytes: &[u8] = input.as_bytes();
 
@@ -153,7 +193,20 @@ fn encode_lone_surrogate_escapes(input: &str) -> Cow<'_, str> {
     Cow::Owned(encoded)
 }
 
-pub type Value = sonic_rs::Value;
+/// Decode the reader's intermediate lone-surrogate encoding into a JavaScript
+/// string.
+///
+/// JSON cannot represent lone surrogates, so [`encode_lone_surrogate_escapes`]
+/// rewrites unpaired surrogate escapes as `U+FFFD` followed by 4 lowercase hex
+/// chars. Decoding those markers into a [`JSStr`] preserves the surrogates when
+/// the AST is serialized back to ESTree.
+pub fn read_js_str<'a>(
+    value: &str,
+    allocator: &impl GetAllocator<'a>,
+) -> JSStr<'a> {
+    decode_lone_surrogate_encoding(value, allocator)
+        .unwrap_or_else(|| JSStr::from_str_in(value, allocator))
+}
 
 pub fn parse(input: &str) -> Result<Value, String> {
     let prepared: Cow<'_, str> = encode_lone_surrogate_escapes(input);

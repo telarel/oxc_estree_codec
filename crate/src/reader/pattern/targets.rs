@@ -8,12 +8,11 @@ use oxc::ast::ast::{
     PrivateIdentifier, PropertyKey, SimpleAssignmentTarget,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, ty_of};
 use crate::reader::expression::expressions::read_expression;
-use crate::reader::json::Value;
 
 fn expression_to_assignment_target<'a>(
     cx: &Cx<'a>,

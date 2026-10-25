@@ -9,12 +9,11 @@ use oxc::ast::ast::{
 };
 use oxc::ast::builder::AstBuilder;
 use oxc::span::Span;
-use sonic_rs::{JsonContainerTrait, JsonValueTrait};
+use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::program::ProgramReader;
 use crate::reader::expression::expressions;
-use crate::reader::json::Value;
 use crate::reader::literal;
 use crate::reader::pattern::binding;
 use crate::reader::pattern::targets;

@@ -7,6 +7,7 @@ use oxc::ast::ast::{
     LabeledStatement, ReturnStatement, Statement, SwitchStatement,
     ThrowStatement, WhileStatement, WithStatement,
 };
+use sonic_rs::Value;
 
 use crate::errors::read::ReadError;
 use crate::reader::declaration::class;
@@ -16,7 +17,6 @@ use crate::reader::declaration::import_export;
 use crate::reader::declaration::interface;
 use crate::reader::declaration::module;
 use crate::reader::engine::context::{Cx, nodes, ty_of};
-use crate::reader::json::Value;
 use crate::reader::statement::control::{
     for_statement, for_statement_left, optional_label, switch_cases,
     try_statement, variable_declaration,

@@ -8,14 +8,13 @@ use oxc::ast::ast::{
     TSTypeName,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::declaration::function::read_binding_identifier_field;
 use crate::reader::declaration::import_export::read_import_or_export_kind;
 use crate::reader::engine::context::{Cx, Seg, ty_of};
 use crate::reader::engine::program::split_directives_and_statements;
-use crate::reader::json::Value;
 use crate::reader::literal;
 
 fn read_module_name_parts<'a>(

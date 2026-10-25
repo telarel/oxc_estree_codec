@@ -4,11 +4,10 @@ use oxc::ast::ast::{
     StringLiteral,
 };
 use oxc::ast::builder::AstBuilder;
-use sonic_rs::{JsonContainerTrait, JsonValueTrait};
+use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, Seg, ty_of};
-use crate::reader::json::Value;
 use crate::reader::literal;
 use crate::reader::statement;
 

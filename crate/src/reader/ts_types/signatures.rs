@@ -8,12 +8,11 @@ use oxc::ast::ast::{
     TSTypeAnnotation, TSTypePredicateName,
 };
 use oxc::span::Span;
-use sonic_rs::{JsonContainerTrait, JsonValueTrait};
+use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::declaration::function;
 use crate::reader::engine::context::{Cx, Seg, ty_of};
-use crate::reader::json::Value;
 use crate::reader::ts_types::names::read_identifier_name;
 use crate::reader::ts_types::types::read_ts_type_annotation;
 

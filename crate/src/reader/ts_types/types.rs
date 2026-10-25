@@ -10,13 +10,12 @@ use oxc::ast::ast::{
     TSTypeQuery, TSTypeReference, TSUnionType,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, nodes, ty_of};
 use crate::reader::expression::expressions;
 use crate::reader::expression::templates;
-use crate::reader::json::Value;
 use crate::reader::ts_types::names::{
     read_binding_identifier, read_identifier_name, read_ts_import_type,
     read_ts_type_name, read_ts_type_query_expr_name,

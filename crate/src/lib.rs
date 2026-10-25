@@ -72,7 +72,7 @@ pub fn json_to_program<'j, 'a>(
     json: &'j str,
     options: JsonToProgramOptions<'a>,
 ) -> Result<Program<'a>, ReadError> {
-    let value: crate::reader::json::Value =
+    let value: sonic_rs::Value =
         crate::reader::json::parse(json).map_err(ReadError::from_message)?;
 
     let reader: ProgramReader<'a> = ProgramReader::new(options.allocator);

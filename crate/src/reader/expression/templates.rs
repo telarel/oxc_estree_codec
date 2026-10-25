@@ -1,10 +1,10 @@
 use oxc::ast::ast::{TemplateElement, TemplateElementValue, TemplateLiteral};
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::Cx;
-use crate::reader::json::Value;
+use crate::reader::json;
 
 pub fn read_template_element<'a>(
     cx: &Cx<'a>,
@@ -30,29 +30,19 @@ pub fn read_template_element<'a>(
     let raw_str: oxc::str::Str<'a> =
         oxc::str::Str::from_str_in(raw, cx.builder());
 
-    let cooked: Option<oxc::str::Str<'a>> = match value_node.get("cooked") {
+    let cooked: Option<oxc::str::JSStr<'a>> = match value_node.get("cooked") {
         | Some(cooked_node) if cooked_node.is_str() => {
             let cooked_str: &str = cooked_node.as_str().unwrap_or_default();
-            Some(oxc::str::Str::from_str_in(cooked_str, cx.builder()))
+            Some(json::read_js_str(cooked_str, cx.builder()))
         },
         | _ => None,
     };
-
-    let lone_surrogates: bool = cooked
-        .as_ref()
-        .is_some_and(|cooked| cooked.as_str().contains('\u{FFFD}'));
 
     let value: TemplateElementValue<'a> =
         TemplateElementValue { raw: raw_str, cooked };
 
     let element: TemplateElement<'a> =
-        TemplateElement::new_with_lone_surrogates(
-            span,
-            value,
-            tail,
-            lone_surrogates,
-            cx.builder(),
-        );
+        TemplateElement::new(span, value, tail, cx.builder());
 
     Ok(element)
 }

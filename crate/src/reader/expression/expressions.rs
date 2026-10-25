@@ -17,7 +17,7 @@ use oxc::ast::ast::{
     UpdateExpression, YieldExpression,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::declaration::class;
@@ -29,7 +29,6 @@ use crate::reader::expression::operators::{
     update_operator,
 };
 use crate::reader::expression::templates::read_template_literal;
-use crate::reader::json::Value;
 use crate::reader::jsx::element;
 use crate::reader::literal;
 use crate::reader::pattern;

@@ -3,10 +3,10 @@ use oxc::ast::ast::{
     JSXAttributeValue, JSXSpreadAttribute,
 };
 use oxc::span::Span;
+use sonic_rs::Value;
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, ty_of};
-use crate::reader::json::Value;
 use crate::reader::jsx::container::read_jsx_expression_container;
 use crate::reader::jsx::element::{
     read_jsx_expression, read_jsx_identifier, read_jsx_namespaced_name,

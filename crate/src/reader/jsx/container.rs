@@ -2,11 +2,11 @@ use oxc::ast::ast::{
     Expression, JSXEmptyExpression, JSXExpression, JSXExpressionContainer,
 };
 use oxc::span::Span;
+use sonic_rs::Value;
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, ty_of};
 use crate::reader::expression::expressions;
-use crate::reader::json::Value;
 
 fn read_jsx_expression_inner<'a>(
     cx: &Cx<'a>,

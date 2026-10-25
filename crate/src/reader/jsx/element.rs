@@ -6,11 +6,10 @@ use oxc::ast::ast::{
     JSXText, ThisExpression,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, ty_of};
-use crate::reader::json::Value;
 use crate::reader::jsx::attribute::read_jsx_attribute_item;
 use crate::reader::jsx::container::read_jsx_expression_container;
 

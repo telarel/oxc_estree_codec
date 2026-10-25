@@ -4,47 +4,11 @@ use oxc::ast::ast::{
     RegExp, RegExpFlags, RegExpLiteral, RegExpPattern, StringLiteral,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::Cx;
-use crate::reader::json::Value;
-
-/// Check whether a string is in oxc's in-memory lone-surrogate encoding:
-/// every `U+FFFD` must be immediately followed by 4 lowercase hex chars.
-fn is_lone_surrogate_encoded(s: &str) -> bool {
-    if !s.contains('\u{FFFD}') {
-        return false;
-    }
-
-    let bytes: &[u8] = s.as_bytes();
-
-    let mut i: usize = 0;
-
-    while i + 3 <= bytes.len() {
-        if bytes[i] == 0xEF && bytes[i + 1] == 0xBF && bytes[i + 2] == 0xBD {
-            if !matches!(
-                bytes.get(i + 3..i + 7),
-                |Some([
-                    b'0'..=b'9' | b'a'..=b'f',
-                    b'0'..=b'9' | b'a'..=b'f',
-                    b'0'..=b'9' | b'a'..=b'f',
-                    b'0'..=b'9' | b'a'..=b'f',
-                ])
-            ) {
-                return false;
-            }
-
-            i += 7;
-
-            continue;
-        }
-
-        i += 1;
-    }
-
-    true
-}
+use crate::reader::json;
 
 fn number_base(raw: &str) -> oxc::syntax::number::NumberBase {
     if raw.starts_with("0x") || raw.starts_with("0X") {
@@ -158,22 +122,11 @@ pub fn read_literal<'a>(
             let raw_str: Option<oxc::str::Str<'a>> =
                 raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
 
-            let lit: StringLiteral<'a> = if is_lone_surrogate_encoded(s) {
-                StringLiteral::new_with_lone_surrogates(
-                    span,
-                    oxc::str::Str::from_str_in(s, cx.builder()),
-                    raw_str,
-                    true,
-                    cx.builder(),
-                )
-            } else {
-                StringLiteral::new(
-                    span,
-                    cx.builder.allocator().alloc_str(s),
-                    raw_str,
-                    cx.builder(),
-                )
-            };
+            let value_str: oxc::str::JSStr<'a> =
+                json::read_js_str(s, cx.builder());
+
+            let lit: StringLiteral<'a> =
+                StringLiteral::new(span, value_str, raw_str, cx.builder());
 
             Ok(Expression::StringLiteral(cx.box_in(lit)))
         },
@@ -229,22 +182,11 @@ pub fn read_string_literal<'a>(
             let raw_str: Option<oxc::str::Str<'a>> =
                 raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
 
-            let lit: StringLiteral<'a> = if is_lone_surrogate_encoded(v) {
-                StringLiteral::new_with_lone_surrogates(
-                    span,
-                    oxc::str::Str::from_str_in(v, cx.builder()),
-                    raw_str,
-                    true,
-                    cx.builder(),
-                )
-            } else {
-                StringLiteral::new(
-                    span,
-                    cx.builder.allocator().alloc_str(v),
-                    raw_str,
-                    cx.builder(),
-                )
-            };
+            let value_str: oxc::str::JSStr<'a> =
+                json::read_js_str(v, cx.builder());
+
+            let lit: StringLiteral<'a> =
+                StringLiteral::new(span, value_str, raw_str, cx.builder());
 
             Ok(lit)
         },

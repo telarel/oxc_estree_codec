@@ -10,7 +10,7 @@ use oxc::ast::ast::{
     TSNamespaceExportDeclaration, WithClause, WithClauseKeyword,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::declaration::class::read_class_declaration;
@@ -20,7 +20,6 @@ use crate::reader::declaration::function::{
 use crate::reader::declaration::interface::read_ts_interface_declaration;
 use crate::reader::engine::context::{Cx, Seg, ty_of};
 use crate::reader::expression::expressions;
-use crate::reader::json::Value;
 use crate::reader::literal;
 use crate::reader::statement;
 

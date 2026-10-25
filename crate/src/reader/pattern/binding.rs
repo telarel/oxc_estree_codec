@@ -4,11 +4,10 @@ use oxc::ast::ast::{
     BindingProperty, BindingRestElement, ObjectPattern,
 };
 use oxc::span::Span;
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, nodes, ty_of};
-use crate::reader::json::Value;
 
 fn binding_property<'a>(
     cx: &Cx<'a>,

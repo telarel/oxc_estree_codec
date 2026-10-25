@@ -6,11 +6,11 @@ use oxc::ast::ast::{
     TSTypeQueryExprName, ThisExpression,
 };
 use oxc::span::Span;
+use sonic_rs::Value;
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, ty_of};
 use crate::reader::expression::expressions;
-use crate::reader::json::Value;
 use crate::reader::ts_types::types::read_ts_type;
 
 pub fn read_identifier_name<'a>(

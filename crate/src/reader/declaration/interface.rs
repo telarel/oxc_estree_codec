@@ -3,11 +3,11 @@ use oxc::ast::ast::{
     TSTypeAliasDeclaration, TSTypeName,
 };
 use oxc::span::Span;
+use sonic_rs::Value;
 
 use crate::errors::read::ReadError;
 use crate::reader::declaration::function::read_binding_identifier_field;
 use crate::reader::engine::context::Cx;
-use crate::reader::json::Value;
 
 fn ts_interface_heritage<'a>(
     cx: &Cx<'a>,

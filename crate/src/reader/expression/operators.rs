@@ -1,9 +1,8 @@
 use oxc::ast::ast::{BinaryOperator, LogicalOperator, UnaryOperator};
-use sonic_rs::JsonValueTrait;
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::Cx;
-use crate::reader::json::Value;
 
 pub fn binary_operator(
     cx: &Cx<'_>,

@@ -3,11 +3,11 @@ use oxc::ast::ast::{
     TSEnumMemberName,
 };
 use oxc::span::Span;
+use sonic_rs::Value;
 
 use crate::errors::read::ReadError;
 use crate::reader::declaration::function::read_binding_identifier_field;
 use crate::reader::engine::context::{Cx, ty_of};
-use crate::reader::json::Value;
 use crate::reader::literal;
 
 fn ts_enum_member_name<'a>(

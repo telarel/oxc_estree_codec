@@ -4,7 +4,7 @@
 
 ## Summary
 
-The JS→Rust path parses ESTree JSON with sonic-rs into a fully-owned DOM (`sonic_rs::Value`), then walks it exactly once with a hand-written reader that builds an oxc `Program` in a caller-provided `Allocator`. The DOM is discarded after the walk. All JSON-representation knowledge is confined to one module (`crate/src/reader/json.rs`); the ~6k-line reader never sees the JSON library.
+The JS→Rust path parses ESTree JSON with sonic-rs into a fully-owned DOM (`sonic_rs::Value`), then walks it exactly once with a hand-written reader that builds an oxc `Program` in a caller-provided `Allocator`. The DOM is discarded after the walk. Parsing and the JSON pre-passes live in one module (`crate/src/reader/json.rs`); the reader names `sonic_rs::Value` and its value traits directly rather than hiding the parser behind a boundary alias.
 
 ## Pipeline
 
@@ -19,7 +19,8 @@ The JS→Rust path parses ESTree JSON with sonic-rs into a fully-owned DOM (`son
 ```
 crate/src/reader/
   json.rs              pre-passes (lone surrogates) + sonic-rs DOM parse;
-                       the ONLY module that imports sonic_rs
+                       reader modules import sonic_rs::Value and its traits
+                       directly
   literal.rs           literals: string/numeric/regexp/bigint (number path
                        is the subtlest code in the reader — see below)
   engine/
@@ -69,7 +70,7 @@ The sentinel cases, all real traffic (emitted by oxc's serializer for non-finite
 
 ## Pre-pass: lone-surrogate escapes
 
-`encode_lone_surrogate_escapes` (in the pre-pass module) rewrites JSON `\ud8xx` escapes with no low half into oxc's in-memory encoding: `U+FFFD` followed by 4 lowercase hex digits. Reason: JSON decoders (sonic-rs included) decode unpaired escapes to U+FFFD, and the reader must distinguish a decoded lone surrogate from a U+FFFD that was literally in the source. Paired surrogates (`\ud834\udd1e`) decode correctly everywhere and are untouched. This pre-pass runs before parsing and must be preserved verbatim in any rewrite of the parse layer.
+`encode_lone_surrogate_escapes` (in the pre-pass module) rewrites JSON `\ud8xx` escapes with no low half into the reader's intermediate encoding: `U+FFFD` followed by 4 lowercase hex digits. Reason: JSON decoders (sonic-rs included) decode unpaired escapes to U+FFFD, and the reader must distinguish a decoded lone surrogate from a U+FFFD that was literally in the source. `read_js_str` decodes that encoding into an `oxc::str::JSStr` (WTF-8), which preserves the lone surrogates in the AST. Paired surrogates (`\ud834\udd1e`) decode correctly everywhere and are untouched. This pre-pass runs before parsing and must be preserved verbatim in any rewrite of the parse layer.
 
 ## Error model
 

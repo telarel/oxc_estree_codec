@@ -64,7 +64,7 @@ These were each discovered the hard way during the campaign:
 - **`raw` is NOT the number's wire text.** The stage-1 plan initially reconstructed `NumericLiteral` values by parsing the `raw` field — correct for decimal literals, wrong for legacy octal (`070`: value field says 56, `raw.parse::<f64>()` gives 70). Only the test262 corpus caught it. The sonic semantics are: parse the raw JSON text of the **value field** (`as_raw_number()`), never `raw`. Details in [implementation.md](./implementation.md#number-semantics-the-value-field-vs-raw).
 - **`1e+400` / `-1e+400` are real traffic, not exotic edges.** oxc's serializer emits them for ±Infinity `NumericLiteral`s, so any parser that hard-errors on exponent overflow (simd-json does) needs a string-safe sentinel rewrite pre-pass — which must track string regions, because a plain backwards `is_number_context` scan is fooled by string content.
 - **`-0` loses its sign in every numeric parser** that returns `u64 0`. The value-field raw-text parse is what preserves it.
-- **Lone-surrogate `\ud8xx` escapes** must be rewritten to oxc's in-memory `U+FFFD` + 4 hex digits encoding before parsing, or the reader cannot distinguish decoded U+FFFD from source U+FFFD. This pre-pass must survive verbatim in any rewrite.
+- **Lone-surrogate `\ud8xx` escapes** must be rewritten to the reader's intermediate `U+FFFD` + 4 hex digits encoding before parsing, or the reader cannot distinguish decoded U+FFFD from source U+FFFD. The reader then decodes that encoding into `oxc::str::JSStr` (WTF-8). This pre-pass must survive verbatim in any rewrite.
 
 ## What was not tested
 
