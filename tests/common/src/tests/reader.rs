@@ -313,8 +313,8 @@ fn test_read_rejects_meta_property_without_names() {
 fn test_read_number_edge_cases() {
     let cases: &[(&str, &str)] = &[
         ("const a = -0;", "const a = -0;\n"),
-        ("const a = 1e999;", "const a = Infinity;\n"),
-        ("const a = -1e999;", "const a = -Infinity;\n"),
+        ("const a = 1e999;", "const a = 1e400;\n"),
+        ("const a = -1e999;", "const a = -1e400;\n"),
         (
             "const a = 123456789012345678901234567890;",
             "const a = 12345678901234568e13;\n",
@@ -442,10 +442,11 @@ fn test_read_infinity_number_positions() {
 
     let out: String = oxc::codegen::Codegen::new().build(&program).code;
 
-    // oxc codegen prints infinite numeric literals by VALUE (`Infinity` /
-    // `-Infinity`), never by `raw` (`1e999`); expectations captured from
-    // oxc's own parse+codegen ground truth.
-    assert_eq!(out, "const a = Infinity;\nconst b = -Infinity;\n");
+    // oxc codegen prints infinite numeric literals as `1e400` / `-1e400`
+    // (not `Infinity`, which a local binding can shadow), never by `raw`
+    // (`1e999`); expectations captured from oxc's own parse+codegen ground
+    // truth.
+    assert_eq!(out, "const a = 1e400;\nconst b = -1e400;\n");
 }
 
 #[test]
@@ -479,5 +480,5 @@ fn test_read_infinity_nested_and_negative() {
 
     let out: String = oxc::codegen::Codegen::new().build(&program).code;
 
-    assert_eq!(out, "const a = -Infinity;\n");
+    assert_eq!(out, "const a = -1e400;\n");
 }
