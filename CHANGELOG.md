@@ -1,3 +1,10 @@
+## Next
+
+### What's Changed
+
+- raise minimum supported Rust version to `1.98.0`
+- update `oxc` version range to `~0.159.0`
+
 ## 0.2.2 (2026-11-05)
 
 ### What's Changed
