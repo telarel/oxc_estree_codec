@@ -1,12 +1,12 @@
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{BindingPattern, Expression, Program, Statement};
 use oxc::span::{SourceType, Span};
-use oxc_estree_codec::{
-    JsonToProgramOptions, ReadError, SpanEncoding, json_to_program,
-};
+use oxc_estree_codec::{ReadError, SpanEncoding};
 use sonic_rs::{JsonValueMutTrait, JsonValueTrait, Object, Value};
 
 use test_helpers::json::{parse_to_json, parse_value};
+
+use crate::tests::support::{assert_field_invalid, read_program_js};
 
 const FILE: &str = "a.js";
 
@@ -23,26 +23,6 @@ fn utf16_offset(
     byte: u64,
 ) -> u64 {
     source[..byte as usize].encode_utf16().count() as u64
-}
-
-fn read_program<'a>(
-    allocator: &'a Allocator,
-    value: &Value,
-    source: &'a str,
-    span_encoding: SpanEncoding,
-) -> Result<Program<'a>, ReadError> {
-    let json: String =
-        sonic_rs::to_string(value).expect("ESTree value must serialize");
-
-    json_to_program(
-        &json,
-        JsonToProgramOptions {
-            allocator,
-            source_type: SourceType::from_path(FILE).unwrap(),
-            source_text: source,
-            span_encoding,
-        },
-    )
 }
 
 fn walk_objects(
@@ -129,24 +109,6 @@ fn identifier_mut(value: &mut Value) -> &mut Value {
     &mut value["body"][0]["expression"]
 }
 
-fn assert_field_invalid(
-    result: Result<Program<'_>, ReadError>,
-    field: &'static str,
-    expected: &'static str,
-) {
-    match result {
-        | Err(ReadError::FieldInvalid {
-            field: actual_field,
-            expected: actual_expected,
-            ..
-        }) => {
-            assert_eq!(actual_field, field);
-            assert_eq!(actual_expected, expected);
-        },
-        | other => panic!("expected FieldInvalid for `{field}`, got {other:?}"),
-    }
-}
-
 fn target_span(program: &Program<'_>) -> Span {
     let statement: &Statement<'_> = &program.body[0];
 
@@ -180,7 +142,7 @@ fn test_utf16_spans_map_to_utf8_bytes() {
     map_offsets_to_utf16(&mut value, source);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect("UTF-16 offsets must read");
 
     let span: Span = target_span(&program);
@@ -199,7 +161,7 @@ fn test_range_only_spans_map_to_utf8_bytes() {
     replace_offsets_with_range(&mut value, source);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect("UTF-16 ranges must read");
 
     let span: Span = target_span(&program);
@@ -218,7 +180,7 @@ fn test_utf8_range_only_spans_are_byte_offsets() {
     replace_offsets_with_byte_range(&mut value);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf8Bytes)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf8Bytes)
             .expect("UTF-8 ranges must read");
 
     let span: Span = target_span(&program);
@@ -238,7 +200,7 @@ fn test_start_end_take_precedence_over_range() {
     insert_bogus_range(&mut value);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect("start/end must take precedence over range");
 
     let span: Span = target_span(&program);
@@ -257,7 +219,7 @@ fn test_utf16_maps_bmp_and_combining_mark_offsets() {
     map_offsets_to_utf16(&mut value, source);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect("BMP and combining mark offsets must read");
 
     let span: Span = target_span(&program);
@@ -276,7 +238,7 @@ fn test_utf16_maps_offsets_before_non_ascii_suffix() {
     map_offsets_to_utf16(&mut value, source);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect("offsets before a non-ASCII suffix must read");
 
     let span: Span = target_span(&program);
@@ -295,7 +257,7 @@ fn test_utf16_rejects_span_inside_surrogate_pair() {
     );
 
     let error: ReadError =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect_err("an offset inside a surrogate pair must fail");
 
     match error {
@@ -321,7 +283,7 @@ fn test_utf16_rejects_span_inside_surrogate_pair_for_end() {
     identifier_mut(&mut value)["end"] = Value::from(1_u64);
 
     let result: Result<Program<'_>, ReadError> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units);
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units);
 
     assert_field_invalid(
         result,
@@ -341,7 +303,7 @@ fn test_utf16_rejects_reversed_span() {
     );
 
     let error: ReadError =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect_err("a reversed span must fail");
 
     match error {
@@ -362,8 +324,12 @@ fn test_utf16_rejects_offset_past_source() {
         identifier_mut(&mut value)["start"] = Value::from(0_u64);
         identifier_mut(&mut value)["end"] = Value::from(100_u64);
 
-        let result: Result<Program<'_>, ReadError> =
-            read_program(&allocator, &value, source, SpanEncoding::Utf16Units);
+        let result: Result<Program<'_>, ReadError> = read_program_js(
+            &allocator,
+            &value,
+            source,
+            SpanEncoding::Utf16Units,
+        );
 
         assert_field_invalid(
             result,
@@ -382,7 +348,7 @@ fn test_utf8_spans_are_identity() {
     let value: Value = parse_estree(source);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf8Bytes)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf8Bytes)
             .expect("UTF-8 offsets must read");
 
     let span: Span = target_span(&program);
@@ -407,7 +373,7 @@ fn test_missing_spans_degrade_to_zero() {
 
     for span_encoding in encodings {
         let program: Program<'_> =
-            read_program(&allocator, &value, "", span_encoding)
+            read_program_js(&allocator, &value, "", span_encoding)
                 .expect("missing spans must not fail the read");
 
         assert_eq!(program.span, Span::new(0, 0));
@@ -433,7 +399,7 @@ fn test_utf16_rejects_non_zero_span_with_empty_source() {
     identifier_mut(&mut value)["end"] = Value::from(2_u64);
 
     let result: Result<Program<'_>, ReadError> =
-        read_program(&allocator, &value, "", SpanEncoding::Utf16Units);
+        read_program_js(&allocator, &value, "", SpanEncoding::Utf16Units);
 
     assert_field_invalid(
         result,
@@ -446,7 +412,7 @@ fn test_utf16_rejects_non_zero_span_with_empty_source() {
     identifier_mut(&mut value)["end"] = Value::from(1_u64);
 
     let result: Result<Program<'_>, ReadError> =
-        read_program(&allocator, &value, "", SpanEncoding::Utf16Units);
+        read_program_js(&allocator, &value, "", SpanEncoding::Utf16Units);
 
     assert_field_invalid(
         result,
@@ -466,7 +432,7 @@ fn test_utf8_rejects_span_above_u32_max() {
     identifier_mut(&mut value)["end"] = Value::from(above + 1);
 
     let result: Result<Program<'_>, ReadError> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf8Bytes);
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf8Bytes);
 
     assert_field_invalid(result, "start", "an offset that fits in u32");
 
@@ -475,7 +441,7 @@ fn test_utf8_rejects_span_above_u32_max() {
     identifier_mut(&mut value)["end"] = Value::from(above);
 
     let result: Result<Program<'_>, ReadError> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf8Bytes);
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf8Bytes);
 
     assert_field_invalid(result, "end", "an offset that fits in u32");
 }
@@ -489,7 +455,7 @@ fn test_span_rejects_partial_start_and_end() {
     identifier_mut(&mut value)["start"] = Value::from(0_u64);
 
     let result: Result<Program<'_>, ReadError> =
-        read_program(&allocator, &value, source, SpanEncoding::new());
+        read_program_js(&allocator, &value, source, SpanEncoding::new());
 
     assert_field_invalid(result, "end", "a number");
 
@@ -497,7 +463,7 @@ fn test_span_rejects_partial_start_and_end() {
     identifier_mut(&mut value)["end"] = Value::from(1_u64);
 
     let result: Result<Program<'_>, ReadError> =
-        read_program(&allocator, &value, source, SpanEncoding::new());
+        read_program_js(&allocator, &value, source, SpanEncoding::new());
 
     assert_field_invalid(result, "start", "a number");
 
@@ -506,7 +472,7 @@ fn test_span_rejects_partial_start_and_end() {
     identifier_mut(&mut value)["end"] = Value::from(1_u64);
 
     let result: Result<Program<'_>, ReadError> =
-        read_program(&allocator, &value, source, SpanEncoding::new());
+        read_program_js(&allocator, &value, source, SpanEncoding::new());
 
     assert_field_invalid(result, "start", "a number");
 }
@@ -527,7 +493,7 @@ fn test_span_rejects_malformed_range() {
         identifier_mut(&mut value)["range"] = range;
 
         let result: Result<Program<'_>, ReadError> =
-            read_program(&allocator, &value, source, SpanEncoding::new());
+            read_program_js(&allocator, &value, source, SpanEncoding::new());
 
         assert_field_invalid(result, "range", "[start, end]");
     }
@@ -542,7 +508,7 @@ fn test_utf16_ascii_source_is_identity() {
     let value: Value = parse_estree(source);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect("ASCII UTF-16 offsets must read");
 
     let span: Span = target_span(&program);
@@ -561,7 +527,7 @@ fn test_utf16_maps_three_byte_bmp_offsets() {
     map_offsets_to_utf16(&mut value, source);
 
     let program: Program<'_> =
-        read_program(&allocator, &value, source, SpanEncoding::Utf16Units)
+        read_program_js(&allocator, &value, source, SpanEncoding::Utf16Units)
             .expect("three-byte BMP offsets must read");
 
     let span: Span = target_span(&program);

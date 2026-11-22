@@ -59,7 +59,9 @@ pub struct JsonToProgramOptions<'a> {
     pub allocator: &'a Allocator,
     /// Source type of the program; resolves unambiguous values from the JSON.
     pub source_type: SourceType,
-    /// Original source text, used to build string atoms from the program.
+    /// Original source text. The reader uses it to build string atoms, map
+    /// UTF-16 offsets, and validate template element spans. If this is empty,
+    /// the reader uses the declared span lengths instead.
     pub source_text: &'a str,
     /// How `start`/`end` and `range` offsets are encoded.
     pub span_encoding: SpanEncoding,

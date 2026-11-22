@@ -121,6 +121,7 @@ impl Utf16Map {
 pub struct Cx<'a> {
     pub builder: AstBuilder<'a>,
     trail: RefCell<Vec<Seg>>,
+    source_text: &'a str,
     span_encoding: SpanEncoding,
     utf16_map: Option<Utf16Map>,
     utf16_len: u64,
@@ -194,6 +195,7 @@ impl<'a> Cx<'a> {
         Cx {
             builder,
             trail,
+            source_text,
             span_encoding,
             utf16_map,
             utf16_len,
@@ -275,12 +277,12 @@ impl<'a> Cx<'a> {
         .ok_or_else(|| self.invalid(node, field, EXPECTED))
     }
 
-    fn checked_span(
+    pub(crate) fn checked_span_opt(
         &self,
         node: &Value,
-    ) -> Result<Span, ReadError> {
+    ) -> Result<Option<Span>, ReadError> {
         let Some((start, end)) = self.span_offsets(node)? else {
-            return Ok(Span::new(0, 0));
+            return Ok(None);
         };
 
         if end < start {
@@ -301,16 +303,20 @@ impl<'a> Cx<'a> {
                     self.invalid(node, "end", "an offset that fits in u32")
                 })?;
 
-                Ok(Span::new(start, end))
+                Ok(Some(Span::new(start, end)))
             },
             | SpanEncoding::Utf16Units => {
                 let start: u32 = self.utf16_to_byte(node, "start", start)?;
 
                 let end: u32 = self.utf16_to_byte(node, "end", end)?;
 
-                Ok(Span::new(start, end))
+                Ok(Some(Span::new(start, end)))
             },
         }
+    }
+
+    pub(crate) fn source_text(&self) -> &'a str {
+        self.source_text
     }
 
     // Spans are optional in some ESTree producers. When `start`/`end` and
@@ -320,8 +326,9 @@ impl<'a> Cx<'a> {
         &self,
         node: &Value,
     ) -> Span {
-        match self.checked_span(node) {
-            | Ok(span) => span,
+        match self.checked_span_opt(node) {
+            | Ok(Some(span)) => span,
+            | Ok(None) => Span::new(0, 0),
             | Err(error) => {
                 let mut span_error = self.span_error.borrow_mut();
                 if span_error.is_none() {

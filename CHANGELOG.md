@@ -13,6 +13,7 @@
 
 - raise minimum supported Rust version to `1.98.0`
 - update `oxc` version range to `~0.159.0`
+- detect content-only and delimiter-inclusive template element spans, including CRLF/CR raw normalization
 - reject invalid `start`, `end`, and `range` values with `ReadError`
 
 ## 0.2.2 (2026-11-05)
