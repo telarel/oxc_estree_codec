@@ -25,6 +25,34 @@ impl Default for ProgramToJsonOptions {
     }
 }
 
+/// How `start`/`end` and `range` offsets in the ESTree JSON are encoded.
+///
+/// By default, it is `Utf8Bytes`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SpanEncoding {
+    /// UTF-8 byte offsets.
+    ///
+    /// This is what oxc's ESTree serializer emits.
+    Utf8Bytes,
+    /// UTF-16 code unit offsets.
+    ///
+    /// This is what JavaScript parsers emit.
+    Utf16Units,
+}
+
+impl SpanEncoding {
+    /// Create a span encoding.
+    pub fn new() -> Self {
+        Self::Utf8Bytes
+    }
+}
+
+impl Default for SpanEncoding {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Clone, Copy)]
 pub struct JsonToProgramOptions<'a> {
     /// Arena allocator the resulting AST nodes are allocated in.
@@ -33,4 +61,6 @@ pub struct JsonToProgramOptions<'a> {
     pub source_type: SourceType,
     /// Original source text, used to build string atoms from the program.
     pub source_text: &'a str,
+    /// How `start`/`end` and `range` offsets are encoded.
+    pub span_encoding: SpanEncoding,
 }

@@ -11,6 +11,7 @@ use oxc::ast::builder::AstBuilder;
 use oxc::span::Span;
 use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
+use crate::_types::options::SpanEncoding;
 use crate::errors::read::ReadError;
 use crate::reader::engine::program::ProgramReader;
 use crate::reader::expression::expressions;
@@ -46,9 +47,84 @@ fn ty_label(node: &Value) -> String {
     if ty.is_empty() { "<missing type>".to_string() } else { ty.to_string() }
 }
 
+// Sparse UTF-16 code unit to UTF-8 byte offset map. Only non-ASCII
+// characters need an entry: ASCII advances both units and bytes equally.
+struct Utf16Char {
+    utf16_start: u32,
+    utf16_len: u32,
+    byte_start: u32,
+    byte_len: u32,
+}
+
+struct Utf16Map {
+    chars: Vec<Utf16Char>,
+}
+
+impl Utf16Map {
+    fn new(source_text: &str) -> Option<Utf16Map> {
+        if source_text.is_ascii() {
+            return None;
+        }
+
+        let mut chars: Vec<Utf16Char> = Vec::new();
+        let mut utf16_start: u32 = 0;
+
+        for (byte_start, ch) in source_text.char_indices() {
+            let utf16_len: u32 = ch.len_utf16() as u32;
+            let byte_len: u32 = ch.len_utf8() as u32;
+
+            if !ch.is_ascii() {
+                chars.push(Utf16Char {
+                    utf16_start,
+                    utf16_len,
+                    byte_start: byte_start as u32,
+                    byte_len,
+                });
+            }
+
+            utf16_start += utf16_len;
+        }
+
+        Some(Utf16Map { chars })
+    }
+
+    fn to_byte(
+        &self,
+        offset: u32,
+    ) -> Option<u32> {
+        let Some(first): Option<&Utf16Char> = self.chars.first() else {
+            return Some(offset);
+        };
+
+        if offset < first.utf16_start {
+            return Some(offset);
+        }
+
+        let index: usize =
+            self.chars.partition_point(|entry| entry.utf16_start <= offset) - 1;
+
+        let entry: &Utf16Char = &self.chars[index];
+
+        let utf16_end: u32 = entry.utf16_start.checked_add(entry.utf16_len)?;
+
+        if offset < utf16_end {
+            // Inside a non-ASCII character only its leading boundary maps.
+            return (offset == entry.utf16_start).then_some(entry.byte_start);
+        }
+
+        let delta: u32 = offset - utf16_end;
+
+        entry.byte_start.checked_add(entry.byte_len)?.checked_add(delta)
+    }
+}
+
 pub struct Cx<'a> {
     pub builder: AstBuilder<'a>,
     trail: RefCell<Vec<Seg>>,
+    span_encoding: SpanEncoding,
+    utf16_map: Option<Utf16Map>,
+    utf16_len: u64,
+    span_error: RefCell<Option<ReadError>>,
 }
 
 macro_rules! req_readers {
@@ -94,7 +170,11 @@ macro_rules! list_readers {
 }
 
 impl<'a> Cx<'a> {
-    pub fn new(reader: &ProgramReader<'a>) -> Cx<'a> {
+    pub fn new(
+        reader: &ProgramReader<'a>,
+        source_text: &'a str,
+        span_encoding: SpanEncoding,
+    ) -> Cx<'a> {
         let allocator: &'a Allocator = reader.builder.allocator();
 
         let builder: AstBuilder<'a> = AstBuilder::new(allocator);
@@ -102,24 +182,158 @@ impl<'a> Cx<'a> {
         let trail: RefCell<Vec<Seg>> =
             RefCell::new(vec![Seg::Field("Program")]);
 
-        Cx { builder, trail }
+        let (utf16_map, utf16_len): (Option<Utf16Map>, u64) =
+            match span_encoding {
+                | SpanEncoding::Utf8Bytes => (None, 0),
+                | SpanEncoding::Utf16Units => (
+                    Utf16Map::new(source_text),
+                    source_text.encode_utf16().count() as u64,
+                ),
+            };
+
+        Cx {
+            builder,
+            trail,
+            span_encoding,
+            utf16_map,
+            utf16_len,
+            span_error: RefCell::new(None),
+        }
     }
 
-    // Spans are optional in some ESTree producers; absent `start`/`end`
-    // degrade to 0/0 rather than failing the read.
+    fn range_offsets(
+        &self,
+        node: &Value,
+    ) -> Result<Option<(u64, u64)>, ReadError> {
+        let Some(range_node): Option<&Value> = node.get("range") else {
+            return Ok(None);
+        };
+
+        let range: &[Value] = range_node
+            .as_array()
+            .map(|values| values.as_slice())
+            .ok_or_else(|| self.invalid(node, "range", "[start, end]"))?;
+
+        let [start_node, end_node] = range else {
+            return Err(self.invalid(node, "range", "[start, end]"));
+        };
+
+        let start: u64 = start_node
+            .as_u64()
+            .ok_or_else(|| self.invalid(node, "range", "[start, end]"))?;
+
+        let end: u64 = end_node
+            .as_u64()
+            .ok_or_else(|| self.invalid(node, "range", "[start, end]"))?;
+
+        Ok(Some((start, end)))
+    }
+
+    fn span_offsets(
+        &self,
+        node: &Value,
+    ) -> Result<Option<(u64, u64)>, ReadError> {
+        let start: Option<&Value> = node.get("start");
+        let end: Option<&Value> = node.get("end");
+
+        match (start, end) {
+            | (None, None) => self.range_offsets(node),
+            | (start, end) => {
+                let start: u64 = start
+                    .ok_or_else(|| self.invalid(node, "start", "a number"))?
+                    .as_u64()
+                    .ok_or_else(|| self.invalid(node, "start", "a number"))?;
+                let end: u64 = end
+                    .ok_or_else(|| self.invalid(node, "end", "a number"))?
+                    .as_u64()
+                    .ok_or_else(|| self.invalid(node, "end", "a number"))?;
+                Ok(Some((start, end)))
+            },
+        }
+    }
+
+    fn utf16_to_byte(
+        &self,
+        node: &Value,
+        field: &'static str,
+        offset: u64,
+    ) -> Result<u32, ReadError> {
+        const EXPECTED: &str =
+            "a UTF-16 offset on a UTF-8 char boundary within source_text";
+
+        if offset > self.utf16_len {
+            return Err(self.invalid(node, field, EXPECTED));
+        }
+
+        let offset: u32 = u32::try_from(offset)
+            .map_err(|_| self.invalid(node, field, EXPECTED))?;
+
+        match &self.utf16_map {
+            | Some(map) => map.to_byte(offset),
+            | None => Some(offset),
+        }
+        .ok_or_else(|| self.invalid(node, field, EXPECTED))
+    }
+
+    fn checked_span(
+        &self,
+        node: &Value,
+    ) -> Result<Span, ReadError> {
+        let Some((start, end)) = self.span_offsets(node)? else {
+            return Ok(Span::new(0, 0));
+        };
+
+        if end < start {
+            return Err(self.invalid(
+                node,
+                "end",
+                "an offset at or after start",
+            ));
+        }
+
+        match self.span_encoding {
+            | SpanEncoding::Utf8Bytes => {
+                let start: u32 = u32::try_from(start).map_err(|_| {
+                    self.invalid(node, "start", "an offset that fits in u32")
+                })?;
+
+                let end: u32 = u32::try_from(end).map_err(|_| {
+                    self.invalid(node, "end", "an offset that fits in u32")
+                })?;
+
+                Ok(Span::new(start, end))
+            },
+            | SpanEncoding::Utf16Units => {
+                let start: u32 = self.utf16_to_byte(node, "start", start)?;
+
+                let end: u32 = self.utf16_to_byte(node, "end", end)?;
+
+                Ok(Span::new(start, end))
+            },
+        }
+    }
+
+    // Spans are optional in some ESTree producers. When `start`/`end` and
+    // `range` are absent, the span degrades to 0/0 rather than failing the
+    // read.
     pub fn span(
         &self,
         node: &Value,
     ) -> Span {
-        let start: u32 =
-            node.get("start").and_then(Value::as_u64).unwrap_or(0) as u32;
+        match self.checked_span(node) {
+            | Ok(span) => span,
+            | Err(error) => {
+                let mut span_error = self.span_error.borrow_mut();
+                if span_error.is_none() {
+                    *span_error = Some(error);
+                }
+                Span::new(0, 0)
+            },
+        }
+    }
 
-        let end_value: u64 =
-            node.get("end").and_then(Value::as_u64).unwrap_or(u64::from(start));
-
-        let end: u32 = end_value as u32;
-
-        Span::new(start, end)
+    pub fn take_span_error(&self) -> Option<ReadError> {
+        self.span_error.borrow_mut().take()
     }
 
     pub fn builder(&self) -> &AstBuilder<'a> {

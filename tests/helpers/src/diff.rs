@@ -2,7 +2,7 @@ use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 
 use oxc_estree_codec::{
-    JsonToProgramOptions, ProgramToJsonOptions, json_to_program,
+    JsonToProgramOptions, ProgramToJsonOptions, SpanEncoding, json_to_program,
     program_to_json,
 };
 
@@ -50,6 +50,7 @@ pub fn roundtrip_bytes_with(
             allocator: &allocator,
             source_type: parser_return.program.source_type,
             source_text: parser_return.program.source_text,
+            span_encoding: SpanEncoding::new(),
         },
     )
     .map_err(|error| RoundtripError::Roundtrip(format!("{file}: {error}")))?;

@@ -30,7 +30,9 @@
 //! ```rust,ignore
 //! use oxc::allocator::Allocator;
 //! use oxc::ast::ast::{Program, SourceType};
-//! use oxc_estree_codec::{JsonToProgramOptions, json_to_program};
+//! use oxc_estree_codec::{
+//!     JsonToProgramOptions, SpanEncoding, json_to_program,
+//! };
 //!
 //! let json: &str = r#"{"type":"Program","body":[...],"sourceType":"module"}"#;
 //!
@@ -44,6 +46,7 @@
 //!         allocator: &allocator,
 //!         source_type: SourceType::from_path("index.js").unwrap(),
 //!         source_text,
+//!         span_encoding: SpanEncoding::new(),
 //!     },
 //! )?;
 //! ```
@@ -56,7 +59,9 @@ use oxc::ast::ast::Program;
 
 use crate::reader::engine::program::ProgramReader;
 
-pub use crate::_types::options::{JsonToProgramOptions, ProgramToJsonOptions};
+pub use crate::_types::options::{
+    JsonToProgramOptions, ProgramToJsonOptions, SpanEncoding,
+};
 pub use crate::errors::read::ReadError;
 
 /// Serialize a typed oxc `Program` into an ESTree JSON string.
@@ -77,7 +82,12 @@ pub fn json_to_program<'j, 'a>(
 
     let reader: ProgramReader<'a> = ProgramReader::new(options.allocator);
 
-    reader.read(&value, options.source_type, options.source_text)
+    reader.read(
+        &value,
+        options.source_type,
+        options.source_text,
+        options.span_encoding,
+    )
 }
 
 #[doc(hidden)]

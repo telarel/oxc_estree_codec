@@ -3,7 +3,7 @@ use std::hint::black_box;
 use criterion::{BenchmarkGroup, BenchmarkId, Criterion, Throughput};
 use oxc::allocator::Allocator;
 
-use oxc_estree_codec::JsonToProgramOptions;
+use oxc_estree_codec::{JsonToProgramOptions, SpanEncoding};
 
 use crate::functions::fixtures::Fixture;
 
@@ -31,6 +31,7 @@ pub fn bench(
                                 allocator: &allocator,
                                 source_type: fixture.source_type,
                                 source_text: fixture.source,
+                                span_encoding: SpanEncoding::new(),
                             },
                         )
                         .unwrap();

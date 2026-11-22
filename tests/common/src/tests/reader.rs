@@ -29,7 +29,12 @@ fn test_read_rejects_unknown_import_phase() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result = reader.read(&value, parser_return.program.source_type, "");
+    let result = reader.read(
+        &value,
+        parser_return.program.source_type,
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     match result {
         | Err(oxc_estree_codec::ReadError::ImportPhaseUnsupported {
@@ -70,8 +75,14 @@ fn test_read_mutated_tree() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let program: oxc::ast::ast::Program<'_> =
-        reader.read(&value, parser_return.program.source_type, code).unwrap();
+    let program: oxc::ast::ast::Program<'_> = reader
+        .read(
+            &value,
+            parser_return.program.source_type,
+            code,
+            oxc_estree_codec::SpanEncoding::new(),
+        )
+        .unwrap();
 
     let out: String = oxc::codegen::Codegen::new().build(&program).code;
 
@@ -91,8 +102,12 @@ fn test_read_error_variant_unsupported_node() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result =
-        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+    let result = reader.read(
+        &value,
+        SourceType::from_path("a.js").unwrap(),
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     match result {
         | Err(ReadError::NodeUnsupported { ty, .. }) => {
@@ -115,8 +130,12 @@ fn test_read_error_variant_missing_field() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result =
-        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+    let result = reader.read(
+        &value,
+        SourceType::from_path("a.js").unwrap(),
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     match result {
         | Err(ReadError::FieldMissing { field, ty, .. }) => {
@@ -140,8 +159,12 @@ fn test_read_error_variant_unsupported_operator() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result =
-        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+    let result = reader.read(
+        &value,
+        SourceType::from_path("a.js").unwrap(),
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     match result {
         | Err(ReadError::OperatorUnsupported { kind, operator, .. }) => {
@@ -165,8 +188,12 @@ fn test_read_rejects_identifier_without_name() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result =
-        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+    let result = reader.read(
+        &value,
+        SourceType::from_path("a.js").unwrap(),
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     match result {
         | Err(ReadError::FieldMissing { field, .. }) => {
@@ -189,8 +216,12 @@ fn test_read_rejects_identifier_with_non_string_name() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result =
-        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+    let result = reader.read(
+        &value,
+        SourceType::from_path("a.js").unwrap(),
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     match result {
         | Err(ReadError::FieldInvalid { field, expected, .. }) => {
@@ -214,8 +245,12 @@ fn test_read_rejects_hashbang_with_non_string_value() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result =
-        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+    let result = reader.read(
+        &value,
+        SourceType::from_path("a.js").unwrap(),
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     match result {
         | Err(ReadError::FieldInvalid { field, .. }) => {
@@ -240,7 +275,12 @@ fn test_read_rejects_string_literal_without_value() {
 
     assert!(
         reader
-            .read(&value, SourceType::from_path("a.js").unwrap(), "")
+            .read(
+                &value,
+                SourceType::from_path("a.js").unwrap(),
+                "",
+                oxc_estree_codec::SpanEncoding::new(),
+            )
             .is_err(),
         "string literal without `value` must fail loudly"
     );
@@ -257,8 +297,12 @@ fn test_read_rejects_regexp_without_pattern() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result =
-        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+    let result = reader.read(
+        &value,
+        SourceType::from_path("a.js").unwrap(),
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     assert!(result.is_err(), "regexp without `pattern` must fail loudly");
 }
@@ -276,7 +320,12 @@ fn test_read_rejects_bigint_without_value() {
 
     assert!(
         reader
-            .read(&value, SourceType::from_path("a.js").unwrap(), "")
+            .read(
+                &value,
+                SourceType::from_path("a.js").unwrap(),
+                "",
+                oxc_estree_codec::SpanEncoding::new(),
+            )
             .is_err(),
         "bigint literal without `bigint` field must fail loudly"
     );
@@ -295,8 +344,12 @@ fn test_read_rejects_meta_property_without_names() {
     let reader: oxc_estree_codec::__internal::ProgramReader<'_> =
         oxc_estree_codec::__internal::ProgramReader::new(&allocator);
 
-    let result =
-        reader.read(&value, SourceType::from_path("a.js").unwrap(), "");
+    let result = reader.read(
+        &value,
+        SourceType::from_path("a.js").unwrap(),
+        "",
+        oxc_estree_codec::SpanEncoding::new(),
+    );
 
     match result {
         | Err(ReadError::FieldMissing { field, ty, .. }) => {
@@ -353,6 +406,7 @@ fn test_read_number_edge_cases() {
                     allocator: &allocator,
                     source_type: parser_return.program.source_type,
                     source_text: code,
+                    span_encoding: oxc_estree_codec::SpanEncoding::new(),
                 },
             )
             .unwrap_or_else(|error| panic!("must read: {code}: {error}"));
@@ -395,6 +449,7 @@ fn test_read_infinity_string_not_corrupted() {
                 allocator: &allocator,
                 source_type: parser_return.program.source_type,
                 source_text: code,
+                span_encoding: oxc_estree_codec::SpanEncoding::new(),
             },
         )
         .unwrap_or_else(|error| panic!("sentinels must read: {error}"));
@@ -436,6 +491,7 @@ fn test_read_infinity_number_positions() {
                 allocator: &allocator,
                 source_type: parser_return.program.source_type,
                 source_text: code,
+                span_encoding: oxc_estree_codec::SpanEncoding::new(),
             },
         )
         .unwrap_or_else(|error| panic!("sentinels must read: {error}"));
@@ -474,6 +530,7 @@ fn test_read_infinity_nested_and_negative() {
                 allocator: &allocator,
                 source_type: parser_return.program.source_type,
                 source_text: code,
+                span_encoding: oxc_estree_codec::SpanEncoding::new(),
             },
         )
         .unwrap();

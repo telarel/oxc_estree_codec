@@ -12,7 +12,7 @@ The JS→Rust path parses ESTree JSON with sonic-rs into a fully-owned DOM (`son
 
 1. `crate::reader::json::parse(json)` — pre-processes the input, then parses it into a `sonic_rs::Value` DOM.
 2. `ProgramReader::new(options.allocator)` — creates the reader state.
-3. `reader.read(&value, source_type, source_text)` — single recursive walk over the DOM, building the oxc AST bottom-up.
+3. `reader.read(&value, source_type, source_text, span_encoding)` — single recursive walk over the DOM, building the oxc AST bottom-up.
 
 ## Module map
 

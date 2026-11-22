@@ -35,7 +35,9 @@ const json: string = JSON.stringify(ast); // ESTree AST → JSON string
 ```rust
 use oxc::allocator::Allocator;
 use oxc::ast::ast::{Program, SourceType};
-use oxc_estree_codec::{JsonToProgramOptions, json_to_program};
+use oxc_estree_codec::{
+    JsonToProgramOptions, SpanEncoding, json_to_program,
+};
 
 let json: &str = r#"{"type":"Program","body":[...],"sourceType":"module"}"#;
 
@@ -49,6 +51,7 @@ let program: Program<'_> = json_to_program(
         allocator: &allocator,
         source_type: SourceType::from_path("index.js").unwrap(),
         source_text,
+        span_encoding: SpanEncoding::new(),
     },
 )?;
 ```

@@ -2,7 +2,7 @@ use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 use sonic_rs::Value;
 
-use oxc_estree_codec::JsonToProgramOptions;
+use oxc_estree_codec::{JsonToProgramOptions, SpanEncoding};
 
 pub struct Fixture {
     pub name: &'static str,
@@ -54,6 +54,7 @@ pub fn prepare(
                 allocator: &allocator,
                 source_type,
                 source_text: source,
+                span_encoding: SpanEncoding::new(),
             },
         )
         .expect("bench fixture round-trips");

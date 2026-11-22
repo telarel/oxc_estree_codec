@@ -2,23 +2,11 @@ use oxc::allocator::Allocator;
 use oxc::span::SourceType;
 
 use oxc_estree_codec::{
-    JsonToProgramOptions, ProgramToJsonOptions, json_to_program,
+    JsonToProgramOptions, ProgramToJsonOptions, SpanEncoding, json_to_program,
     program_to_json,
 };
 
-fn parse_to_json(
-    code: &str,
-    source_type: SourceType,
-) -> String {
-    let allocator: Allocator = Allocator::default();
-
-    let parser_return: oxc::parser::ParserReturn<'_> =
-        oxc::parser::Parser::new(&allocator, code, source_type).parse();
-
-    assert!(parser_return.diagnostics.is_empty());
-
-    parser_return.program.to_estree_json(true, false)
-}
+use test_helpers::json::parse_to_json;
 
 fn read_with_source_type<'a>(
     allocator: &'a Allocator,
@@ -27,7 +15,12 @@ fn read_with_source_type<'a>(
 ) -> oxc::ast::ast::Program<'a> {
     json_to_program(
         json,
-        JsonToProgramOptions { allocator, source_type, source_text: "" },
+        JsonToProgramOptions {
+            allocator,
+            source_type,
+            source_text: "",
+            span_encoding: SpanEncoding::new(),
+        },
     )
     .unwrap()
 }
@@ -101,6 +94,7 @@ fn test_json_to_program_reads_serializer_output() {
             allocator: &allocator,
             source_type: parser_return.program.source_type,
             source_text: code,
+            span_encoding: SpanEncoding::new(),
         },
     )
     .unwrap();
@@ -120,6 +114,7 @@ fn test_json_to_program_rejects_invalid_json() {
             allocator: &allocator,
             source_type: SourceType::from_path("a.js").unwrap(),
             source_text: "",
+            span_encoding: SpanEncoding::new(),
         },
     );
 

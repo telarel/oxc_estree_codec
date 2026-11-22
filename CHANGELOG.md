@@ -1,9 +1,19 @@
 ## Next
 
+### Breaking Changes
+
+- `JsonToProgramOptions` now requires the `span_encoding` field
+
+### What's New
+
+- add `SpanEncoding` option to select UTF-8 or UTF-16 offset input
+- add `range` fallback when `start` and `end` are absent
+
 ### What's Changed
 
 - raise minimum supported Rust version to `1.98.0`
 - update `oxc` version range to `~0.159.0`
+- reject invalid `start`, `end`, and `range` values with `ReadError`
 
 ## 0.2.2 (2026-11-05)
 

@@ -6,6 +6,7 @@ use oxc::ast::ast::{
 use oxc::ast::builder::AstBuilder;
 use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
+use crate::_types::options::SpanEncoding;
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, Seg, ty_of};
 use crate::reader::literal;
@@ -157,8 +158,9 @@ impl<'a> ProgramReader<'a> {
         json: &Value,
         source_type: SourceType,
         source_text: &'a str,
+        span_encoding: SpanEncoding,
     ) -> Result<Program<'a>, ReadError> {
-        let cx: Cx<'a> = Cx::new(self);
+        let cx: Cx<'a> = Cx::new(self, source_text, span_encoding);
 
         let mut body: ArenaVec<'a, Statement<'a>> =
             ArenaVec::new_in(&self.builder);
@@ -198,6 +200,9 @@ impl<'a> ProgramReader<'a> {
             &self.builder,
         );
 
-        Ok(program)
+        match cx.take_span_error() {
+            | Some(error) => Err(error),
+            | None => Ok(program),
+        }
     }
 }

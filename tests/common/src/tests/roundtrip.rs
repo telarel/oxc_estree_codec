@@ -1,6 +1,6 @@
 use oxc::allocator::Allocator;
 use oxc::span::SourceType;
-use oxc_estree_codec::__internal::ProgramReader;
+use oxc_estree_codec::{__internal::ProgramReader, SpanEncoding};
 use sonic_rs::Value;
 
 use test_helpers::json::parse_value;
@@ -28,7 +28,12 @@ fn roundtrip(
     let reader: ProgramReader<'_> = ProgramReader::new(&allocator);
 
     let program: oxc::ast::ast::Program<'_> = reader
-        .read(&value, parser_return.program.source_type, code)
+        .read(
+            &value,
+            parser_return.program.source_type,
+            code,
+            SpanEncoding::new(),
+        )
         .expect("reader round-trips serializer output");
 
     oxc::codegen::Codegen::new().build(&program).code
