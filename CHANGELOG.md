@@ -16,6 +16,7 @@
 - require a Program root and reject trailing JSON
 - detect content-only and delimiter-inclusive template element spans, including CRLF/CR raw normalization
 - reject invalid `start`, `end`, and `range` values with `ReadError`
+- distinguish a literal U+FFFD from the lone-surrogate encoding
 
 ## 0.2.2 (2026-11-05)
 

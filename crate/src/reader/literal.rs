@@ -1,4 +1,3 @@
-use oxc::allocator::GetAllocator;
 use oxc::ast::ast::{
     BigIntLiteral, BooleanLiteral, Expression, NullLiteral, NumericLiteral,
     RegExp, RegExpFlags, RegExpLiteral, RegExpPattern, StringLiteral,
@@ -79,17 +78,18 @@ pub fn read_literal<'a>(
             .as_str()
             .ok_or_else(|| cx.invalid(regex, "flags", "a string"))?;
 
-        let pattern_text: &'a str = cx.builder.allocator().alloc_str(pattern);
+        let pattern_text: oxc::str::Str<'a> =
+            json::read_source_str(pattern, cx.builder());
 
         let flags_bits: RegExpFlags = regexp_flags(flags);
 
         let regex: RegExp<'a> = RegExp {
-            pattern: RegExpPattern { pattern: None, text: pattern_text.into() },
+            pattern: RegExpPattern { pattern: None, text: pattern_text },
             flags: flags_bits,
         };
 
         let raw_str: Option<oxc::str::Str<'a>> =
-            raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
+            raw.map(|r| json::read_source_str(r, cx.builder()));
 
         let lit: RegExpLiteral<'a> =
             RegExpLiteral::new(span, regex, raw_str, cx.builder());
@@ -99,7 +99,7 @@ pub fn read_literal<'a>(
 
     if let Some(bigint) = node.get("bigint").filter(|b| b.is_str()) {
         let raw_str: Option<oxc::str::Str<'a>> =
-            raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
+            raw.map(|r| json::read_source_str(r, cx.builder()));
 
         let value_str: oxc::str::Str<'a> = oxc::str::Str::from_str_in(
             bigint.as_str().unwrap_or_default(),
@@ -120,7 +120,7 @@ pub fn read_literal<'a>(
             let s: &str = value_node.as_str().unwrap_or_default();
 
             let raw_str: Option<oxc::str::Str<'a>> =
-                raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
+                raw.map(|r| json::read_source_str(r, cx.builder()));
 
             let value_str: oxc::str::JSStr<'a> =
                 json::read_js_str(s, cx.builder());
@@ -140,7 +140,7 @@ pub fn read_literal<'a>(
                 number_base(raw.unwrap_or(""));
 
             let raw_str: Option<oxc::str::Str<'a>> =
-                raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
+                raw.map(|r| json::read_source_str(r, cx.builder()));
 
             let lit: NumericLiteral<'a> =
                 NumericLiteral::new(span, value, raw_str, base, cx.builder());
@@ -180,7 +180,7 @@ pub fn read_string_literal<'a>(
     match value {
         | Some(v) => {
             let raw_str: Option<oxc::str::Str<'a>> =
-                raw.map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
+                raw.map(|r| json::read_source_str(r, cx.builder()));
 
             let value_str: oxc::str::JSStr<'a> =
                 json::read_js_str(v, cx.builder());

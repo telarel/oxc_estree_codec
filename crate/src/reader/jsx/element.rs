@@ -10,6 +10,7 @@ use sonic_rs::{JsonValueTrait, Value};
 
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, ty_of};
+use crate::reader::json;
 use crate::reader::jsx::attribute::read_jsx_attribute_item;
 use crate::reader::jsx::container::read_jsx_expression_container;
 
@@ -191,12 +192,12 @@ fn read_jsx_child<'a>(
         | "JSXText" => {
             let span: Span = cx.span(node);
 
-            let value_str: oxc::str::Str<'a> = cx.text(node, "value")?;
+            let value_str: oxc::str::Str<'a> = cx.text_source(node, "value")?;
 
             let raw: Option<oxc::str::Str<'a>> = node
                 .get("raw")
                 .and_then(Value::as_str)
-                .map(|r| oxc::str::Str::from_str_in(r, cx.builder()));
+                .map(|r| json::read_source_str(r, cx.builder()));
 
             let text: JSXText<'a> =
                 JSXText::new(span, value_str, raw, cx.builder());

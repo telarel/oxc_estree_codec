@@ -4,4 +4,5 @@ mod reader;
 mod roundtrip;
 mod spans;
 mod support;
+mod surrogates;
 mod templates;

@@ -15,6 +15,7 @@ use crate::_types::options::SpanEncoding;
 use crate::errors::read::ReadError;
 use crate::reader::engine::program::ProgramReader;
 use crate::reader::expression::expressions;
+use crate::reader::json;
 use crate::reader::literal;
 use crate::reader::pattern::binding;
 use crate::reader::pattern::targets;
@@ -599,7 +600,7 @@ impl<'a> Cx<'a> {
         Ok(oxc::str::Ident::from_str_in(name, &self.builder))
     }
 
-    pub fn text(
+    pub fn text_source(
         &self,
         node: &Value,
         field: &'static str,
@@ -611,7 +612,7 @@ impl<'a> Cx<'a> {
             .as_str()
             .ok_or_else(|| self.invalid(node, field, "a string"))?;
 
-        Ok(oxc::str::Str::from_str_in(value, &self.builder))
+        Ok(json::read_source_str(value, &self.builder))
     }
 
     req_readers! {

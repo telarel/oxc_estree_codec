@@ -126,13 +126,14 @@ pub fn read_template_element<'a>(
         .as_str()
         .ok_or_else(|| cx.invalid(value_node, "raw", "a string"))?;
 
-    let raw_len: u32 = u32::try_from(raw.len())
+    let raw_str: oxc::str::Str<'a> = json::read_source_str(raw, cx.builder());
+
+    let restored: &str = raw_str.as_str();
+
+    let raw_len: u32 = u32::try_from(restored.len())
         .map_err(|_| cx.invalid(value_node, "raw", "at most u32 bytes"))?;
 
-    let span: Span = element_span(cx, node, raw, raw_len, tail)?;
-
-    let raw_str: oxc::str::Str<'a> =
-        oxc::str::Str::from_str_in(raw, cx.builder());
+    let span: Span = element_span(cx, node, restored, raw_len, tail)?;
 
     let cooked: Option<oxc::str::JSStr<'a>> = match value_node.get("cooked") {
         | Some(cooked_node) if cooked_node.is_str() => {

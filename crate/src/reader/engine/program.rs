@@ -9,6 +9,7 @@ use sonic_rs::{JsonValueTrait, Value};
 use crate::_types::options::SpanEncoding;
 use crate::errors::read::ReadError;
 use crate::reader::engine::context::{Cx, Seg, ty_of};
+use crate::reader::json;
 use crate::reader::literal;
 use crate::reader::statement;
 
@@ -44,7 +45,7 @@ fn directive_if_any<'a>(
         .ok_or_else(|| cx.invalid(node, "directive", "a string"))?;
 
     let directive_atom: oxc::str::Str<'a> =
-        oxc::str::Str::from_str_in(directive_str, cx.builder());
+        json::read_source_str(directive_str, cx.builder());
 
     let expression_node: &Value =
         node.get("expression").ok_or_else(|| cx.err(node))?;
@@ -131,7 +132,7 @@ fn read_hashbang<'a>(
         .ok_or_else(|| cx.invalid(node, "value", "a string"))?;
 
     let value_atom: oxc::str::Str<'a> =
-        oxc::str::Str::from_str_in(value, cx.builder());
+        json::read_source_str(value, cx.builder());
 
     let hashbang: Hashbang<'a> =
         Hashbang::new(cx.span(node), value_atom, cx.builder());
