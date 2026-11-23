@@ -159,16 +159,28 @@ fn read_root<'v>(
     cx.req_array(json, "body")
 }
 
+/// Reader that builds an oxc `Program` from an ESTree DOM.
+///
+/// `json_to_program` uses it after the JSON pre-pass. The doc-hidden
+/// `__internal` re-export exposes it to tests and benchmarks, which supply a
+/// pre-built DOM and skip the pre-pass.
 pub struct ProgramReader<'a> {
+    /// Builder for arena-allocated AST nodes.
     pub builder: AstBuilder<'a>,
 }
 
 impl<'a> ProgramReader<'a> {
+    /// Create a reader that allocates AST nodes in `allocator`.
     pub fn new(allocator: &'a Allocator) -> Self {
         let builder: AstBuilder<'a> = AstBuilder::new(allocator);
         Self { builder }
     }
 
+    /// Read a pre-built ESTree DOM into an oxc `Program`.
+    ///
+    /// `source_text` and `span_encoding` have the same meaning as in
+    /// [`crate::JsonToProgramOptions`]. The DOM is expected to be already
+    /// decoded; this method does not run the JSON pre-pass.
     pub fn read(
         &self,
         json: &Value,

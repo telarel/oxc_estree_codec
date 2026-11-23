@@ -65,6 +65,9 @@ pub use crate::_types::options::{
 pub use crate::errors::read::ReadError;
 
 /// Serialize a typed oxc `Program` into an ESTree JSON string.
+///
+/// [`ProgramToJsonOptions::include_ts_fields`] and
+/// [`ProgramToJsonOptions::ranges`] control the output shape.
 pub fn program_to_json(
     program: &Program<'_>,
     options: ProgramToJsonOptions,
@@ -73,6 +76,13 @@ pub fn program_to_json(
 }
 
 /// Read an ESTree JSON string into a typed oxc `Program`.
+///
+/// The input must be a `Program` object; trailing JSON after the value is
+/// rejected. Malformed or unsupported input returns [`ReadError`] and never
+/// panics.
+///
+/// Source-type refinement, span decoding, and template-span validation follow
+/// [`JsonToProgramOptions`].
 pub fn json_to_program<'j, 'a>(
     json: &'j str,
     options: JsonToProgramOptions<'a>,
