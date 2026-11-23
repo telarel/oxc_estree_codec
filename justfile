@@ -65,8 +65,16 @@ test-babel:
 test-eslint-typescript:
     cargo test -p test_eslint_typescript -- --nocapture
 
+# Generate third-party ESTree fixtures
+estree-fixtures:
+    pnpm --filter test-estree run fixtures
+
+# Run third-party ESTree compatibility test
+test-estree: estree-fixtures
+    cargo test -p test_estree -- --nocapture
+
 # Run test
-test: test-common test-fixtures test-test262 test-babel test-eslint-typescript
+test: test-common test-fixtures test-test262 test-babel test-eslint-typescript test-estree
 
 # Run bench
 bench:

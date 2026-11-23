@@ -26,6 +26,8 @@ updates:
               - "*"
       commit-message:
           prefix: "chore"
+      exclude-paths:
+          - "tests/estree"
     # Cargo
     - package-ecosystem: "cargo"
       directory: "/"

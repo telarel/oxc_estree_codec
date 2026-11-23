@@ -14,16 +14,17 @@ This repository is a Rust workspace.
 
 ### Crates
 
-| Path                      | Description                             |
-| ------------------------- | --------------------------------------- |
-| `crate`                   | The library itself                      |
-| `tests/helpers`           | Shared test helpers                     |
-| `tests/common`            | Common tests for the public APIs        |
-| `tests/fixtures`          | Tests for the checked-in fixtures       |
-| `tests/test262`           | Tests for the test262 corpus            |
-| `tests/babel`             | Tests for the babel corpus              |
-| `tests/eslint_typescript` | Tests for the eslint typescript corpus  |
-| `bench`                   | Benchmark for measuring the performance |
+| Path                      | Description                                    |
+| ------------------------- | ---------------------------------------------- |
+| `crate`                   | The library itself                             |
+| `tests/helpers`           | Shared test helpers                            |
+| `tests/common`            | Common tests for the public APIs               |
+| `tests/fixtures`          | Tests for the checked-in fixtures              |
+| `tests/test262`           | Tests for the test262 corpus                   |
+| `tests/babel`             | Tests for the babel corpus                     |
+| `tests/eslint_typescript` | Tests for the eslint typescript corpus         |
+| `tests/estree`            | Tests for third-party ESTree producer fixtures |
+| `bench`                   | Benchmark for measuring the performance        |
 
 ## Records
 

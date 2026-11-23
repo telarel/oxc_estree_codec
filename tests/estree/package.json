@@ -1,0 +1,16 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "fixtures": "node ./scripts/generate-estree-fixtures.ts"
+    },
+    "devDependencies": {
+        "@babel/parser": "8.1.3",
+        "@types/node": "^26.6.6",
+        "@typescript-eslint/typescript-estree": "8.73.0",
+        "acorn": "8.19.0",
+        "espree": "11.2.0",
+        "esprima": "4.0.1",
+        "typescript": "6.0.3"
+    }
+}

@@ -10,5 +10,8 @@ export default defineConfig({
         "test262/**",
         "babel/**",
         "eslint_typescript/**",
+        // Test fixtures
+        "tests/estree/cases/**",
+        "tests/estree/fixtures/**",
     ],
 });

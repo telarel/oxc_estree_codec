@@ -67,9 +67,10 @@ pub struct JsonToProgramOptions<'a> {
     pub source_type: SourceType,
     /// Original source text.
     ///
-    /// The reader uses it to build string atoms, map UTF-16 offsets, and
-    /// validate template element spans. UTF-16 offsets must be within this
-    /// text and on a UTF-8 character boundary. Template element spans must
+    /// The reader stores it on the resulting `Program`, uses it to map
+    /// UTF-16 offsets, and uses it to validate template element spans.
+    /// UTF-16 offsets must be within this text and on a UTF-8 character
+    /// boundary. Template element spans must
     /// match `value.raw` after CRLF/CR normalization, under either the
     /// content-only or delimiter-inclusive convention. For template element
     /// validation, an empty source text uses the declared span lengths

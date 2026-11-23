@@ -1411,6 +1411,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "test_estree"
+version = "0.0.0"
+dependencies = [
+ "oxc",
+ "oxc_estree_codec",
+ "test_helpers",
+]
+
+[[package]]
 name = "test_fixtures"
 version = "0.0.0"
 dependencies = [

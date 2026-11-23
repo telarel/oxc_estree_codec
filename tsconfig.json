@@ -1,4 +1,4 @@
 {
-    "extends": "@apst/tsconfig/lib",
+    "extends": "./tsconfig.base.json",
     "include": ["./scripts/**/*"]
 }

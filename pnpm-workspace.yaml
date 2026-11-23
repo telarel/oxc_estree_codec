@@ -1,3 +1,6 @@
+packages:
+    - tests/estree
+
 autoInstallPeers: false
 strictPeerDependencies: false
 

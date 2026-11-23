@@ -11,12 +11,14 @@ export default defineConfig(
             ...IGNORE_PATTERNS_DEFAULT,
             // Rust
             "target/**",
-            // Test fixtures
-            "tests/fixtures/data/**",
             // Git submodules
             "test262/**",
             "babel/**",
             "eslint_typescript/**",
+            // Test fixtures
+            "tests/fixtures/data/**",
+            "tests/estree/cases/**",
+            "tests/estree/fixtures/**",
         ],
         options: {
             typeAware: true,

@@ -1,0 +1,12 @@
+#:schema https://www.schemastore.org/cargo.json
+
+[package]
+name = "test_estree"
+edition.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dev-dependencies]
+oxc = { workspace = true, features = ["ast_visit"] }
+oxc_estree_codec = { workspace = true }
+test_helpers = { workspace = true }

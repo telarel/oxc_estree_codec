@@ -42,5 +42,8 @@ jobs:
               with:
                   toolchain: ${{ matrix.rust.code }}
 
+            - name: Setup Node
+              uses: alpheusci/setup-node@v1
+
             - name: Run tests
               run: just test

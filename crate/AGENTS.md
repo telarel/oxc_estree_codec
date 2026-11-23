@@ -55,10 +55,11 @@ The crate has no unit tests. Tests and shared helpers live in these workspace cr
 | `tests/test262`           | test262 corpus, including parse-negative classification                                                                                                                   |
 | `tests/babel`             | Babel parser fixtures with parse-error and skip-list classification                                                                                                       |
 | `tests/eslint_typescript` | typescript-eslint fixtures with `_error_` and skip-list classification                                                                                                    |
+| `tests/estree`            | Third-party producer fixtures (generated): offset encodings, spans, template conventions, decode/encode identity                                                          |
 
 The corpus suites run `oxc parse -> program_to_json -> json_to_program -> program_to_json` and require byte-identical output. A read-path change must keep them green.
 
-The external corpora (test262, babel, eslint-typescript) are submodules; `tests/fixtures` is checked in. If a suite reports an empty corpus, run `git submodule update --init`.
+The external corpora (test262, babel, eslint-typescript) are submodules. `tests/fixtures` is checked in. `just estree-fixtures` generates the third-party ESTree fixtures under `tests/estree/fixtures`, and they are not checked in. `just test-estree` runs that recipe first. If a suite reports an empty corpus, run `git submodule update --init`.
 
 ```sh
 just test-common
@@ -66,6 +67,7 @@ just test-fixtures
 just test-test262
 just test-babel
 just test-eslint-typescript
+just test-estree
 just test
 just check
 ```
