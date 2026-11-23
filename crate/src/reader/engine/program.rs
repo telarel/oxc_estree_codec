@@ -4,7 +4,7 @@ use oxc::ast::ast::{
     StringLiteral,
 };
 use oxc::ast::builder::AstBuilder;
-use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
+use sonic_rs::{JsonValueTrait, Value};
 
 use crate::_types::options::SpanEncoding;
 use crate::errors::read::ReadError;
@@ -62,17 +62,11 @@ fn directive_if_any<'a>(
 
 pub fn split_directives_and_statements<'a>(
     cx: &Cx<'a>,
-    parent_node: &Value,
+    body: &[Value],
     directives: &mut ArenaVec<'a, Directive<'a>>,
     statements: &mut ArenaVec<'a, Statement<'a>>,
 ) -> Result<(), ReadError> {
-    for (index, node) in parent_node
-        .get("body")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .enumerate()
-    {
+    for (index, node) in body.iter().enumerate() {
         cx.push(Seg::Index(index));
 
         let step: Result<(), ReadError> = match directive_if_any(cx, node)? {
@@ -105,9 +99,11 @@ pub fn read_function_body<'a>(
         ArenaVec::new_in(cx.builder());
 
     cx.child(Seg::field("body"), |cx| {
+        let body_nodes: &[Value] = cx.req_array(body_node, "body")?;
+
         split_directives_and_statements(
             cx,
-            body_node,
+            body_nodes,
             &mut directives,
             &mut statements,
         )
@@ -143,6 +139,25 @@ fn read_hashbang<'a>(
     Ok(hashbang)
 }
 
+fn read_root<'v>(
+    cx: &Cx<'_>,
+    json: &'v Value,
+) -> Result<&'v [Value], ReadError> {
+    if !json.is_object() {
+        return Err(cx.invalid(json, "type", "a Program object"));
+    }
+
+    let Some(node_type): Option<&Value> = json.get("type") else {
+        return Err(cx.missing(json, "type"));
+    };
+
+    if node_type.as_str() != Some("Program") {
+        return Err(cx.invalid(json, "type", "\"Program\""));
+    }
+
+    cx.req_array(json, "body")
+}
+
 pub struct ProgramReader<'a> {
     pub builder: AstBuilder<'a>,
 }
@@ -162,6 +177,8 @@ impl<'a> ProgramReader<'a> {
     ) -> Result<Program<'a>, ReadError> {
         let cx: Cx<'a> = Cx::new(self, source_text, span_encoding);
 
+        let body_nodes: &[Value] = read_root(&cx, json)?;
+
         let mut body: ArenaVec<'a, Statement<'a>> =
             ArenaVec::new_in(&self.builder);
 
@@ -171,7 +188,7 @@ impl<'a> ProgramReader<'a> {
         cx.child(Seg::Field("body"), |cx| {
             split_directives_and_statements(
                 cx,
-                json,
+                body_nodes,
                 &mut directives,
                 &mut body,
             )

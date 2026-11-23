@@ -1,12 +1,16 @@
 use oxc::allocator::Allocator;
 use oxc::span::SourceType;
-use sonic_rs::Value;
+use sonic_rs::{Deserializer, Read, Value};
 
 pub fn parse_value(json: &str) -> Value {
-    sonic_rs::Deserializer::from_str(json)
-        .use_rawnumber()
-        .deserialize::<Value>()
-        .unwrap()
+    let mut deserializer: Deserializer<Read<'_>> =
+        Deserializer::from_str(json).use_rawnumber();
+
+    let value: Value = deserializer.deserialize::<Value>().unwrap();
+
+    deserializer.end().unwrap();
+
+    value
 }
 
 pub fn parse_to_json(

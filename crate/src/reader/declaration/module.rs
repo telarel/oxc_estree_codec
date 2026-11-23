@@ -56,7 +56,14 @@ fn ts_module_block<'a>(
         oxc::allocator::Vec::new_in(cx.builder());
 
     cx.child(Seg::field("body"), |cx| {
-        split_directives_and_statements(cx, node, &mut directives, &mut body)
+        let body_nodes: &[Value] = cx.req_array(node, "body")?;
+
+        split_directives_and_statements(
+            cx,
+            body_nodes,
+            &mut directives,
+            &mut body,
+        )
     })?;
 
     Ok(TSModuleBlock::new(span, directives, body, cx.builder()))

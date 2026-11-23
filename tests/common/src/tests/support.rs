@@ -63,3 +63,13 @@ pub(crate) fn assert_field_invalid<T: Debug>(
         | other => panic!("expected FieldInvalid for `{field}`, got {other:?}"),
     }
 }
+
+pub(crate) fn assert_read_error<T: Debug>(
+    result: Result<T, ReadError>,
+    expected: ReadError,
+) {
+    match result {
+        | Err(error) => assert_eq!(error, expected),
+        | Ok(_) => panic!("expected {expected:?}, got a Program"),
+    }
+}

@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use oxc::allocator::GetAllocator;
 use oxc::str::{JSStr, JSStrBuilder};
-use sonic_rs::Value;
+use sonic_rs::{Deserializer, Read, Value};
 
 fn hex_code_point(bytes: &[u8]) -> Option<u16> {
     if bytes.len() != 4 {
@@ -211,8 +211,14 @@ pub fn read_js_str<'a>(
 pub fn parse(input: &str) -> Result<Value, String> {
     let prepared: Cow<'_, str> = encode_lone_surrogate_escapes(input);
 
-    sonic_rs::Deserializer::from_str(prepared.as_ref())
-        .use_rawnumber()
+    let mut deserializer: Deserializer<Read<'_>> =
+        Deserializer::from_str(prepared.as_ref()).use_rawnumber();
+
+    let value: Value = deserializer
         .deserialize::<Value>()
-        .map_err(|error| error.to_string())
+        .map_err(|error| error.to_string())?;
+
+    deserializer.end().map_err(|error| error.to_string())?;
+
+    Ok(value)
 }

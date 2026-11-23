@@ -468,6 +468,21 @@ impl<'a> Cx<'a> {
         result
     }
 
+    pub fn req_array<'v>(
+        &self,
+        node: &'v Value,
+        field: &'static str,
+    ) -> Result<&'v [Value], ReadError> {
+        let value: &Value =
+            node.get(field).ok_or_else(|| self.missing(node, field))?;
+
+        let array: &[Value] = value
+            .as_array()
+            .ok_or_else(|| self.invalid(node, field, "an array"))?;
+
+        Ok(array)
+    }
+
     pub fn opt<T, F>(
         &self,
         node: &Value,
