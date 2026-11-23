@@ -225,10 +225,15 @@ pub fn read_ts_constructor_type<'a>(
 
     let (params, this_param) = signature_params(cx, node, span)?;
 
-    // a `this` parameter is not valid on a constructor type, but reading
-    // through the shared signature params keeps paths uniform; the
-    // serialized `params` array does not include `this` here.
-    debug_assert!(this_param.is_none());
+    // Reuse the shared signature parser for uniform error paths; `this` is
+    // not valid on a constructor type.
+    if this_param.is_some() {
+        return Err(cx.invalid(
+            node,
+            "params",
+            "no `this` parameter on a constructor type",
+        ));
+    }
 
     let return_type: ArenaBox<'a, TSTypeAnnotation<'a>> =
         cx.child(Seg::field("returnType"), |cx| {

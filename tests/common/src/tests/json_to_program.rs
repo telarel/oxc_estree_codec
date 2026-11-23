@@ -9,7 +9,9 @@ use sonic_rs::{JsonValueMutTrait, Value};
 
 use test_helpers::json::{parse_to_json, parse_value};
 
-use crate::tests::support::{assert_read_error, read_program, read_program_js};
+use crate::tests::support::{
+    assert_field_invalid, assert_read_error, read_program, read_program_js,
+};
 
 fn read_result<'a>(
     allocator: &'a Allocator,
@@ -379,6 +381,37 @@ fn test_json_to_program_rejects_missing_function_body() {
             ty: "BlockStatement".to_string(),
             path: "Program.body[0].body.body".to_string(),
         },
+    );
+}
+
+#[test]
+fn test_json_to_program_rejects_this_parameter_on_constructor_type() {
+    let allocator: Allocator = Allocator::default();
+
+    let source: &str = "type T = new () => Bar;";
+
+    let mut value: Value = parse_estree(source, "a.ts");
+
+    let params: &mut sonic_rs::Array =
+        value["body"][0]["typeAnnotation"]["params"]
+            .as_array_mut()
+            .expect("constructor type params");
+
+    params.push(
+        sonic_rs::from_str::<Value>(r#"{"type":"Identifier","name":"this"}"#)
+            .expect("valid identifier JSON"),
+    );
+
+    assert_field_invalid(
+        read_program(
+            &allocator,
+            &value,
+            source,
+            SourceType::from_path("a.ts").unwrap(),
+            SpanEncoding::new(),
+        ),
+        "params",
+        "no `this` parameter on a constructor type",
     );
 }
 
