@@ -60,11 +60,10 @@ fn read_ts_signature<'a>(
 ) -> Result<TSSignature<'a>, ReadError> {
     match ty_of(node) {
         | "TSPropertySignature" => {
-            let key: PropertyKey<'a> = cx.property_key(node, "key")?;
+            let key: PropertyKey<'a> = cx.property_key(node)?;
 
             let signature: TSPropertySignature<'a> = TSPropertySignature::new(
                 cx.span(node),
-                cx.flag(node, "computed"),
                 cx.flag(node, "optional"),
                 cx.flag(node, "readonly"),
                 key,
@@ -77,7 +76,7 @@ fn read_ts_signature<'a>(
         | "TSMethodSignature" => {
             let span: Span = cx.span(node);
 
-            let key: PropertyKey<'a> = cx.property_key(node, "key")?;
+            let key: PropertyKey<'a> = cx.property_key(node)?;
 
             let kind: TSMethodSignatureKind =
                 match node.get("kind").and_then(Value::as_str) {
@@ -98,7 +97,6 @@ fn read_ts_signature<'a>(
             let signature: TSMethodSignature<'a> = TSMethodSignature::new(
                 span,
                 key,
-                cx.flag(node, "computed"),
                 cx.flag(node, "optional"),
                 kind,
                 cx.opt_type_parameters(node)?,

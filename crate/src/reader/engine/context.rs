@@ -624,8 +624,6 @@ impl<'a> Cx<'a> {
         ts => types::read_ts_type : TSType<'a>;
         string_literal => literal::read_string_literal :
             StringLiteral<'a>;
-        property_key => targets::read_property_key :
-            PropertyKey<'a>;
     }
 
     opt_readers! {
@@ -640,6 +638,17 @@ impl<'a> Cx<'a> {
             Expression<'a>;
         stmts => statement::read_statement : Statement<'a>;
         ts_types => types::read_ts_type : TSType<'a>;
+    }
+
+    pub fn property_key(
+        &self,
+        node: &Value,
+    ) -> Result<PropertyKey<'a>, ReadError> {
+        let computed: bool = self.flag(node, "computed");
+
+        self.req(node, "key", |cx, key_node| {
+            targets::read_property_key(cx, key_node, computed)
+        })
     }
 
     pub fn opt_type_arguments(

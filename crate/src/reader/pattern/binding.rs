@@ -15,10 +15,9 @@ fn binding_property<'a>(
 ) -> Result<BindingProperty<'a>, ReadError> {
     Ok(BindingProperty::new(
         cx.span(node),
-        cx.property_key(node, "key")?,
+        cx.property_key(node)?,
         cx.pattern(node, "value")?,
         cx.flag(node, "shorthand"),
-        cx.flag(node, "computed"),
         cx.builder(),
     ))
 }

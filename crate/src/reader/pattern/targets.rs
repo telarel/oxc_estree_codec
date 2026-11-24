@@ -4,8 +4,9 @@ use oxc::ast::ast::{
     AssignmentTargetPattern, AssignmentTargetProperty,
     AssignmentTargetPropertyIdentifier, AssignmentTargetPropertyProperty,
     AssignmentTargetRest, AssignmentTargetWithDefault, Expression,
-    IdentifierReference, MemberExpression, ObjectAssignmentTarget,
-    PrivateIdentifier, PropertyKey, SimpleAssignmentTarget,
+    IdentifierName, IdentifierReference, MemberExpression,
+    ObjectAssignmentTarget, PrivateIdentifier, PropertyKey,
+    SimpleAssignmentTarget,
 };
 use oxc::span::Span;
 use sonic_rs::{JsonValueTrait, Value};
@@ -153,9 +154,8 @@ fn assignment_target_property<'a>(
     let property: AssignmentTargetPropertyProperty<'a> =
         AssignmentTargetPropertyProperty::new(
             cx.span(node),
-            cx.property_key(node, "key")?,
+            cx.property_key(node)?,
             cx.req(node, "value", read_assignment_target_maybe_default)?,
-            cx.flag(node, "computed"),
             cx.builder(),
         );
 
@@ -228,9 +228,35 @@ fn read_assignment_target_maybe_default<'a>(
     Ok(AssignmentTargetMaybeDefault::from(target))
 }
 
+fn static_property_key<'a>(
+    cx: &Cx<'a>,
+    expression: Expression<'a>,
+    node: &Value,
+) -> Result<PropertyKey<'a>, ReadError> {
+    match expression {
+        | Expression::Identifier(ident) => {
+            let name: IdentifierName<'a> =
+                IdentifierName::new(ident.span, ident.name, cx.builder());
+
+            Ok(PropertyKey::StaticIdentifier(cx.box_in(name)))
+        },
+        | Expression::StringLiteral(literal) => {
+            Ok(PropertyKey::StaticStringLiteral(literal))
+        },
+        | Expression::NumericLiteral(literal) => {
+            Ok(PropertyKey::StaticNumericLiteral(literal))
+        },
+        | Expression::BigIntLiteral(literal) => {
+            Ok(PropertyKey::StaticBigIntLiteral(literal))
+        },
+        | _ => Err(cx.err(node)),
+    }
+}
+
 pub fn read_property_key<'a>(
     cx: &Cx<'a>,
     node: &Value,
+    computed: bool,
 ) -> Result<PropertyKey<'a>, ReadError> {
     if ty_of(node) == "PrivateIdentifier" {
         let private: PrivateIdentifier<'a> =
@@ -239,7 +265,13 @@ pub fn read_property_key<'a>(
         return Ok(PropertyKey::PrivateIdentifier(cx.box_in(private)));
     }
 
-    Ok(PropertyKey::from(read_expression(cx, node)?))
+    let expression: Expression<'a> = read_expression(cx, node)?;
+
+    if computed {
+        return Ok(PropertyKey::from(expression));
+    }
+
+    static_property_key(cx, expression, node)
 }
 
 pub fn read_identifier<'a>(

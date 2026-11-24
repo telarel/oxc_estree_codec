@@ -173,11 +173,10 @@ fn object_property<'a>(
     Ok(ObjectProperty::new(
         cx.span(node),
         kind,
-        cx.property_key(node, "key")?,
+        cx.property_key(node)?,
         cx.expr(node, "value")?,
         cx.flag(node, "method"),
         cx.flag(node, "shorthand"),
-        cx.flag(node, "computed"),
         cx.builder(),
     ))
 }

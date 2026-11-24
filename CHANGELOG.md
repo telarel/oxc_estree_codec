@@ -3,10 +3,11 @@
 ### Breaking
 
 - change `json_to_program` to reject invalid `start`, `end`, and `range` values with `ReadError`
+- change `json_to_program` to reject non-computed property keys that are not identifiers, static literals, or private identifiers with `ReadError`
 - change `json_to_program` to require a `Program` root and reject trailing JSON
 - change `JsonToProgramOptions` to require the `span_encoding` field
 - change the minimum supported Rust version to `1.98.0`
-- change the `oxc` version range to `~0.159.0`
+- change the `oxc` version range to `~0.160.0`
 
 ### Features
 

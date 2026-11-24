@@ -9,32 +9,6 @@ use crate::errors::read::ReadError;
 use crate::reader::engine::context::Cx;
 use crate::reader::json;
 
-fn number_base(raw: &str) -> oxc::syntax::number::NumberBase {
-    if raw.starts_with("0x") || raw.starts_with("0X") {
-        oxc::syntax::number::NumberBase::Hex
-    } else if raw.starts_with("0o") || raw.starts_with("0O") {
-        oxc::syntax::number::NumberBase::Octal
-    } else if raw.starts_with("0b") || raw.starts_with("0B") {
-        oxc::syntax::number::NumberBase::Binary
-    } else if raw.contains('.') || raw.contains('e') || raw.contains('E') {
-        oxc::syntax::number::NumberBase::Float
-    } else {
-        oxc::syntax::number::NumberBase::Decimal
-    }
-}
-
-fn bigint_base(raw: &str) -> oxc::syntax::number::BigintBase {
-    if raw.starts_with("0x") || raw.starts_with("0X") {
-        oxc::syntax::number::BigintBase::Hex
-    } else if raw.starts_with("0o") || raw.starts_with("0O") {
-        oxc::syntax::number::BigintBase::Octal
-    } else if raw.starts_with("0b") || raw.starts_with("0B") {
-        oxc::syntax::number::BigintBase::Binary
-    } else {
-        oxc::syntax::number::BigintBase::Decimal
-    }
-}
-
 pub fn regexp_flags(flags: &str) -> RegExpFlags {
     let mut bits: RegExpFlags = RegExpFlags::empty();
 
@@ -106,11 +80,8 @@ pub fn read_literal<'a>(
             cx.builder(),
         );
 
-        let base: oxc::syntax::number::BigintBase =
-            bigint_base(raw.unwrap_or_default());
-
         let lit: BigIntLiteral<'a> =
-            BigIntLiteral::new(span, value_str, raw_str, base, cx.builder());
+            BigIntLiteral::new(span, value_str, raw_str, cx.builder());
 
         return Ok(Expression::BigIntLiteral(cx.box_in(lit)));
     }
@@ -136,14 +107,11 @@ pub fn read_literal<'a>(
                 .and_then(|number| number.as_str().parse::<f64>().ok())
                 .unwrap_or(f64::INFINITY);
 
-            let base: oxc::syntax::number::NumberBase =
-                number_base(raw.unwrap_or(""));
-
             let raw_str: Option<oxc::str::Str<'a>> =
                 raw.map(|r| json::read_source_str(r, cx.builder()));
 
             let lit: NumericLiteral<'a> =
-                NumericLiteral::new(span, value, raw_str, base, cx.builder());
+                NumericLiteral::new(span, value, raw_str, cx.builder());
 
             Ok(Expression::NumericLiteral(cx.box_in(lit)))
         },

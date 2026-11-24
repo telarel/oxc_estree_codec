@@ -108,6 +108,7 @@ const CASES: readonly Case[] = [
     { file: "modern_templates.js", parsers: ALL_NO_ESPRIMA },
     { file: "unicode.js", parsers: PARSER_NAMES },
     { file: "literals.js", parsers: PARSER_NAMES },
+    { file: "keys.js", parsers: PARSER_NAMES },
     { file: "bigint.js", parsers: ALL_NO_ESPRIMA },
     { file: "comments.js", parsers: PARSER_NAMES },
     { file: "hashbang.js", parsers: ALL_NO_ESPRIMA },
@@ -117,6 +118,7 @@ const CASES: readonly Case[] = [
         parsers: ["espree", "babel", "typescript_estree"],
     },
     { file: "types.ts", parsers: ["typescript_estree"] },
+    { file: "keys.ts", parsers: ["typescript_estree"] },
     { file: "types.tsx", parsers: ["typescript_estree"] },
 ];
 

@@ -136,6 +136,84 @@ fn test_json_to_program_reads_serializer_output() {
 }
 
 #[test]
+fn test_json_to_program_preserves_property_key_computed() {
+    let code: &str = concat!(
+        "const key = 'k';\n",
+        "const object = { plain: 1, \"string\": 2, 3: 3, 1n: 6, [key]: 4, [\"computed\"]: 5,\n",
+        "method() {}, \"quoted method\"() {}, 6() {}, [key]() {} };\n",
+        "const { plain, \"string\": renamed, 3: numeric, [key]: computed } = object;\n",
+        "({ plain, \"string\": renamed, 3: numeric, [key]: computed } = object);\n",
+        "class C { plain = 1; \"string\" = 2; 3 = 3; [key] = 4;\n",
+        "m() {} \"n\"() {} 7() {} [key]() {} get g() { return 1; } set g(v) {}\n",
+        "static s() {} static [key]() {} }",
+    );
+
+    let source_type: SourceType = SourceType::from_path("k.ts").unwrap();
+
+    let json: String = parse_to_json(code, source_type);
+
+    let allocator: Allocator = Allocator::default();
+
+    let program: oxc::ast::ast::Program<'_> =
+        read_with_source_type(&allocator, &json, source_type);
+
+    let after: String = program_to_json(&program, ProgramToJsonOptions::new());
+
+    assert_eq!(
+        after, json,
+        "computed and static property keys must round-trip byte-identically"
+    );
+}
+
+#[test]
+fn test_json_to_program_preserves_property_key_computed_typescript() {
+    let code: &str = concat!(
+        "interface I { plain: number; \"string\": number; 3: number; [key]: number;\n",
+        "m(): void; \"n\"(): void; 4(): void; [key](): void; }\n",
+        "class C { plain = 1; \"string\" = 2; 3 = 3; [key] = 4;\n",
+        "m() {} \"n\"() {} 4() {} [key]() {} readonly r = 5;\n",
+        "private p() {} static s() {} static [key]() {} }",
+    );
+
+    let source_type: SourceType = SourceType::from_path("k.ts").unwrap();
+
+    let json: String = parse_to_json(code, source_type);
+
+    let allocator: Allocator = Allocator::default();
+
+    let program: oxc::ast::ast::Program<'_> =
+        read_with_source_type(&allocator, &json, source_type);
+
+    let after: String = program_to_json(&program, ProgramToJsonOptions::new());
+
+    assert_eq!(
+        after, json,
+        "TypeScript computed and static property keys must round-trip byte-identically"
+    );
+}
+
+#[test]
+fn test_json_to_program_rejects_non_computed_dynamic_property_key() {
+    let allocator: Allocator = Allocator::default();
+
+    let source: &str = "const object = { [`k`]: 1 };";
+
+    let mut value: Value = parse_estree(source, "a.js");
+
+    value["body"][0]["declarations"][0]["init"]["properties"][0]["computed"] =
+        Value::from(false);
+
+    assert_read_error(
+        read_program_js(&allocator, &value, source, SpanEncoding::new()),
+        ReadError::NodeUnsupported {
+            ty: "TemplateLiteral".to_string(),
+            path: "Program.body[0].declarations[0].init.properties[0].key"
+                .to_string(),
+        },
+    );
+}
+
+#[test]
 fn test_json_to_program_rejects_invalid_json() {
     let allocator: Allocator = Allocator::default();
 

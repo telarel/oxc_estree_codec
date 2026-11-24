@@ -19,7 +19,7 @@ The library crate. It converts an ESTree JSON string into an oxc `Program` and a
 
 - `json_to_program` runs `json::parse` into a `sonic_rs::Value`, then `ProgramReader::read` walks it once and builds the AST. The DOM is dropped after the walk.
 - AST nodes live in the caller's `Allocator`. Build with `AstBuilder`; allocate through `cx.box_in` or `ArenaVec`. Never allocate nodes with `std::boxed::Box`.
-- A reader is `fn(&Cx<'a>, &Value) -> Result<T<'a>, ReadError>`. Dispatch on `ty_of(node)`; use the `nodes!` macro for simple type-to-constructor maps.
+- Most readers are `fn(&Cx<'a>, &Value) -> Result<T<'a>, ReadError>`. A reader that needs data from the parent node takes more arguments. Dispatch on `ty_of(node)`; use the `nodes!` macro for simple type-to-constructor maps.
 - Use `cx.req` / `opt` / `list` / `child` for nested nodes so the `Seg` trail keeps error paths correct.
 - `Program` and `FunctionBody` store directives separately in oxc. Always split them with `split_directives_and_statements`; never read a body as one statement list.
 - Use `cx.flag` / `cx.flag_or` for booleans. ESTree omits flags that are false.
@@ -29,8 +29,10 @@ The library crate. It converts an ESTree JSON string into an oxc `Program` and a
 
 - Parse JSON only through `json::parse`. Its pre-pass encodes lone surrogates and literal `U+FFFD` as `U+FFFD` plus four hex digits, and the readers depend on that encoding.
 - Use `read_js_str` for decoded string fields such as `Literal.value` and `TemplateElement.value.cooked`. Use `read_source_str` for source text (`raw`, regex `pattern`, directives, hashbang, JSX text, including `JSXText.value`).
-- For `NumericLiteral`, parse the raw JSON text of the `value` field (`as_raw_number()`), never `raw`; `raw` supplies `number_base` and the output `raw` field. This preserves `-0`, `±Infinity`, and legacy octal values. `BigIntLiteral` uses `bigint` for its value and `raw` for its base; `NullLiteral` uses `raw` as its discriminator.
+- For `NumericLiteral`, parse the raw JSON text of the `value` field (`as_raw_number()`), never `raw`; `raw` supplies the output `raw` field. This preserves `-0`, `±Infinity`, and legacy octal values. `BigIntLiteral` uses `bigint` for its value and `raw` for the output `raw` field; `NullLiteral` uses `raw` as its discriminator.
 - Accept arbitrary field order and unknown extra fields. Access fields by name and ignore unread fields; the eslint-typescript corpus depends on this.
+- oxc 0.160+ does not store `computed` on the AST node that holds a property key. Read `computed` from the parent node. Build `PropertyKey` from that flag.
+- A computed key uses the inherited `Expression` variants. A non-computed key uses one of `StaticIdentifier`, `StaticStringLiteral`, `StaticNumericLiteral`, `StaticBigIntLiteral`, or `PrivateIdentifier`. The serializer infers `computed` from the `PropertyKey` variant.
 - Readers must return a typed `ReadError` for unsupported input; never panic.
 - `__internal::ProgramReader` is doc-hidden. It exists for tests and benchmarks, accepts a pre-built DOM, and does not run the JSON pre-pass.
 

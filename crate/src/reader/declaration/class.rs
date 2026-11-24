@@ -51,7 +51,7 @@ fn method_definition<'a>(
 ) -> Result<MethodDefinition<'a>, ReadError> {
     let span: Span = cx.span(node);
 
-    let key: PropertyKey<'a> = cx.property_key(node, "key")?;
+    let key: PropertyKey<'a> = cx.property_key(node)?;
 
     let function: Function<'a> = cx.req(node, "value", |cx, value_node| {
         // TS-ESTree represents method/function values without a body as
@@ -92,7 +92,6 @@ fn method_definition<'a>(
         key,
         cx.box_in(function),
         kind,
-        cx.flag(node, "computed"),
         cx.flag(node, "static"),
         cx.flag(node, "override"),
         cx.flag(node, "optional"),
@@ -110,7 +109,7 @@ fn property_definition<'a>(
 ) -> Result<PropertyDefinition<'a>, ReadError> {
     let span: Span = cx.span(node);
 
-    let key: PropertyKey<'a> = cx.property_key(node, "key")?;
+    let key: PropertyKey<'a> = cx.property_key(node)?;
 
     let property_type: PropertyDefinitionType = match ty {
         | "TSAbstractPropertyDefinition" => {
@@ -126,7 +125,6 @@ fn property_definition<'a>(
         key,
         cx.annotation(node, "typeAnnotation")?,
         cx.opt_expr(node, "value")?,
-        cx.flag(node, "computed"),
         cx.flag(node, "static"),
         cx.flag(node, "declare"),
         cx.flag(node, "override"),
@@ -147,7 +145,7 @@ fn accessor_property<'a>(
 ) -> Result<AccessorProperty<'a>, ReadError> {
     let span: Span = cx.span(node);
 
-    let key: PropertyKey<'a> = cx.property_key(node, "key")?;
+    let key: PropertyKey<'a> = cx.property_key(node)?;
 
     let accessor_type: AccessorPropertyType = match ty {
         | "TSAbstractAccessorProperty" => {
@@ -163,7 +161,6 @@ fn accessor_property<'a>(
         key,
         cx.annotation(node, "typeAnnotation")?,
         cx.opt_expr(node, "value")?,
-        cx.flag(node, "computed"),
         cx.flag(node, "static"),
         cx.flag(node, "override"),
         cx.flag(node, "definite"),
