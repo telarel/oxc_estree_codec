@@ -1,8 +1,6 @@
 use std::cell::RefCell;
 
-use oxc::allocator::{
-    Allocator, Box as ArenaBox, GetAllocator, Vec as ArenaVec,
-};
+use oxc::allocator::{Allocator, Box as ArenaBox, Vec as ArenaVec};
 use oxc::ast::ast::{
     BindingPattern, Expression, PropertyKey, Statement, StringLiteral, TSType,
     TSTypeAnnotation, TSTypeParameterDeclaration, TSTypeParameterInstantiation,
@@ -13,7 +11,6 @@ use sonic_rs::{JsonContainerTrait, JsonValueTrait, Value};
 
 use crate::_types::options::SpanEncoding;
 use crate::errors::read::ReadError;
-use crate::reader::engine::program::ProgramReader;
 use crate::reader::expression::expressions;
 use crate::reader::json;
 use crate::reader::literal;
@@ -173,12 +170,10 @@ macro_rules! list_readers {
 
 impl<'a> Cx<'a> {
     pub fn new(
-        reader: &ProgramReader<'a>,
+        allocator: &'a Allocator,
         source_text: &'a str,
         span_encoding: SpanEncoding,
     ) -> Cx<'a> {
-        let allocator: &'a Allocator = reader.builder.allocator();
-
         let builder: AstBuilder<'a> = AstBuilder::new(allocator);
 
         let trail: RefCell<Vec<Seg>> =

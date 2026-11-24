@@ -21,6 +21,8 @@ The library crate. It converts an ESTree JSON string into an oxc `Program` and a
 - AST nodes live in the caller's `Allocator`. Build with `AstBuilder`; allocate through `cx.box_in` or `ArenaVec`. Never allocate nodes with `std::boxed::Box`.
 - Most readers are `fn(&Cx<'a>, &Value) -> Result<T<'a>, ReadError>`. A reader that needs data from the parent node takes more arguments. Dispatch on `ty_of(node)`; use the `nodes!` macro for simple type-to-constructor maps.
 - Use `cx.req` / `opt` / `list` / `child` for nested nodes so the `Seg` trail keeps error paths correct.
+- The reader modules are mutually recursive because the JS/TS grammar is: `declaration`, `expression`, `statement`, `pattern`, `jsx`, and `ts_types` form module cycles and one item-level tangle. `deslop-please` reports `module-cycle` and `tangle` here; do not add a dispatch layer to silence them.
+- `Cx` is the context every reader works through. Its broad interface and its `builder`/`span_error` accessors are deliberate; `deslop-please` reports `shallow-module` and `field-leak` here for that reason.
 - `Program` and `FunctionBody` store directives separately in oxc. Always split them with `split_directives_and_statements`; never read a body as one statement list.
 - Use `cx.flag` / `cx.flag_or` for booleans. ESTree omits flags that are false.
 - Source-type refinement is public behavior; see `JsonToProgramOptions::source_type`.

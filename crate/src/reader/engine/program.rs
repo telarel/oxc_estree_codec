@@ -1,4 +1,4 @@
-use oxc::allocator::{Allocator, Vec as ArenaVec};
+use oxc::allocator::{Allocator, GetAllocator, Vec as ArenaVec};
 use oxc::ast::ast::{
     Comment, Directive, FunctionBody, Hashbang, Program, SourceType, Statement,
     StringLiteral,
@@ -188,7 +188,8 @@ impl<'a> ProgramReader<'a> {
         source_text: &'a str,
         span_encoding: SpanEncoding,
     ) -> Result<Program<'a>, ReadError> {
-        let cx: Cx<'a> = Cx::new(self, source_text, span_encoding);
+        let cx: Cx<'a> =
+            Cx::new(self.builder.allocator(), source_text, span_encoding);
 
         let body_nodes: &[Value] = read_root(&cx, json)?;
 
