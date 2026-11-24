@@ -118,10 +118,11 @@ fn read_ts_signature<'a>(
             let return_type: Option<ArenaBox<'a, TSTypeAnnotation<'a>>> =
                 cx.annotation(node, "returnType")?;
 
-            // the serialized `params` array includes `this` as its first
+            // The serialized `params` array includes `this` as its first
             // element for call signatures (see oxc's
             // `TSCallSignatureDeclarationParams` serializer); it is read
-            // back out into `this_param` here.
+            // back out into `this_param` here. Construct signatures have no
+            // representation for it, so they reject it below.
             let signature: TSSignature<'a> =
                 if ty_of(node) == "TSCallSignatureDeclaration" {
                     TSSignature::TSCallSignatureDeclaration(cx.box_in(
@@ -135,6 +136,14 @@ fn read_ts_signature<'a>(
                         ),
                     ))
                 } else {
+                    if this_param.is_some() {
+                        return Err(cx.invalid(
+                            node,
+                            "params",
+                            "no `this` parameter on a construct signature",
+                        ));
+                    }
+
                     TSSignature::TSConstructSignatureDeclaration(cx.box_in(
                         TSConstructSignatureDeclaration::new(
                             span,

@@ -16,7 +16,7 @@
 ### Fixes
 
 - add detection of content-only and delimiter-inclusive template element spans to `json_to_program`, including CRLF/CR raw normalization
-- change `json_to_program` to reject a `this` parameter on a constructor type with `ReadError` instead of panicking or dropping it
+- change `json_to_program` to reject a `this` parameter on a constructor type or construct signature with `ReadError` instead of panicking or dropping it
 - change the surrogate pre-pass to distinguish a literal U+FFFD from the lone-surrogate encoding
 
 ## 0.2.2 (2026-11-05)

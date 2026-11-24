@@ -1,4 +1,5 @@
 use oxc::allocator::Allocator;
+use oxc::ast::ast::{Statement, TSSignature};
 use oxc::span::SourceType;
 
 use oxc_estree_codec::{
@@ -413,6 +414,69 @@ fn test_json_to_program_rejects_this_parameter_on_constructor_type() {
         "params",
         "no `this` parameter on a constructor type",
     );
+}
+
+#[test]
+fn test_json_to_program_rejects_this_parameter_on_construct_signature() {
+    let allocator: Allocator = Allocator::default();
+
+    let source: &str = "interface I { new (): Bar; }";
+
+    let mut value: Value = parse_estree(source, "a.ts");
+
+    let params: &mut sonic_rs::Array =
+        value["body"][0]["body"]["body"][0]["params"]
+            .as_array_mut()
+            .expect("construct signature params");
+
+    params.push(
+        sonic_rs::from_str::<Value>(r#"{"type":"Identifier","name":"this"}"#)
+            .expect("valid identifier JSON"),
+    );
+
+    assert_field_invalid(
+        read_program(
+            &allocator,
+            &value,
+            source,
+            SourceType::from_path("a.ts").unwrap(),
+            SpanEncoding::new(),
+        ),
+        "params",
+        "no `this` parameter on a construct signature",
+    );
+}
+
+#[test]
+fn test_json_to_program_preserves_this_parameter_on_call_signature() {
+    let allocator: Allocator = Allocator::default();
+
+    let source: &str = "interface I { (this: Foo): Bar; }";
+
+    let value: Value = parse_estree(source, "a.ts");
+
+    let program: oxc::ast::ast::Program<'_> = read_program(
+        &allocator,
+        &value,
+        source,
+        SourceType::from_path("a.ts").unwrap(),
+        SpanEncoding::new(),
+    )
+    .expect("a call signature may declare a `this` parameter");
+
+    let statement: &Statement<'_> = &program.body[0];
+
+    let Statement::TSInterfaceDeclaration(interface) = statement else {
+        panic!("expected a TS interface declaration");
+    };
+
+    let signature: &TSSignature<'_> = &interface.body.body[0];
+
+    let TSSignature::TSCallSignatureDeclaration(call) = signature else {
+        panic!("expected a TS call signature declaration");
+    };
+
+    assert!(call.this_param.is_some());
 }
 
 #[test]
