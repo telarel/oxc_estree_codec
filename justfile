@@ -67,7 +67,7 @@ test-eslint-typescript:
 
 # Generate third-party ESTree fixtures
 estree-fixtures:
-    pnpm --filter test-estree run fixtures
+    pnpm --dir tests/estree run fixtures
 
 # Run third-party ESTree compatibility test
 test-estree: estree-fixtures
