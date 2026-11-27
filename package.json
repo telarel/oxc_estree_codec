@@ -7,7 +7,7 @@
         "@apst/tsconfig": "^1.0.0",
         "@decimalturn/toml-patch": "^3.3.3",
         "@types/node": "^26.6.10",
-        "@types/react": "^19.3.1",
+        "@types/react": "^19.3.3",
         "consola": "^3.4.2",
         "oxfmt": "~0.80.0",
         "oxlint": "^1.95.0",
